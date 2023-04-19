@@ -1,6 +1,6 @@
 import javax.swing.*;
-import java.util.Stack;
 import java.awt.*;
+import java.util.Stack;
 
 public class Navigator {
     private final Stack<JPanel> stack = new Stack<>();
@@ -10,13 +10,16 @@ public class Navigator {
         this.root = root;
     }
 
-    void open(JPanel panel) {
-        this.root.add(panel);
+    void open(JPanel panel, CardLayout layout, String desc) {
+        root.getContentPane().add(panel, desc);
+        layout.show(root.getContentPane(), desc);
+
         stack.push(panel);
     }
 
-    void close() {
-        JPanel panel = stack.pop();
-        this.root.remove(panel);
+    void close(CardLayout layout) {
+//        JPanel panel = stack.pop();
+//        this.root.remove(panel);
+        layout.previous(root.getContentPane());
     }
 }

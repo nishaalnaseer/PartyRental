@@ -1,6 +1,7 @@
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.*;
+
 
 public class PartyRental {
 
@@ -8,12 +9,15 @@ public class PartyRental {
 
     private final JFrame mainFrame = new JFrame("Party Rentals");
     private final Navigator navigator = new Navigator(mainFrame);
+    private CardLayout cardLayout;
 
 
     PartyRental() {
         mainFrame.setSize(800, 700);
 //        mainFrame.minimumSize(new Dimension(700, 600));
         mainFrame.setMinimumSize(new Dimension(700, 700));
+        cardLayout = new CardLayout();
+        mainFrame.getContentPane().setLayout(cardLayout);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         loginPage();
 
@@ -21,18 +25,6 @@ public class PartyRental {
     }
 
     void loginPage() {
-//        JPanel panel = new JPanel();
-//        JPanel container = new JPanel();
-//
-//        Border border = BorderFactory.createLineBorder(Color.BLACK);
-//        container.setBorder(border);
-//        container.setPreferredSize(new Dimension(400, 500));
-//
-//        // Use a BorderLayout to center the panel within the JFrame
-//        container.setLayout(new BorderLayout());
-//        panel.add(container, BorderLayout.CENTER);
-//
-//        System.out.println(x);
 
         JPanel panel = new JPanel(new GridBagLayout());
         JPanel container = new JPanel(new GridBagLayout());
@@ -60,7 +52,11 @@ public class PartyRental {
         JButton loginButton = new JButton("Login");
         JButton createAccount = new JButton("Create Account");
 
-//        loginButton.setPreferredSize(new Dimension(50, loginButton.getPreferredSize().height));
+        createAccount.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                customerAccountCreation();
+            }
+        });
 
         label.setHorizontalAlignment(JLabel.CENTER);
 
@@ -74,7 +70,15 @@ public class PartyRental {
         gbc2.gridy = 4;
         container.add(createAccount, gbc2);
 
-        navigator.open(panel);
+        navigator.open(panel, cardLayout, "login");
+    }
+
+    void customerAccountCreation() {
+        JPanel panel = new JPanel();
+
+
+
+        navigator.open(panel, cardLayout, "createAccount");
     }
 
     public static void main(String[] args) {
