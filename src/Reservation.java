@@ -3,7 +3,7 @@ import java.util.Date;
 
 public class Reservation {
     private final int reservationId;
-    private final int customerId;
+    private final Customer customer;
     private final ArrayList<Item> items;
     private String remarks;
     private final Date reservationDate;
@@ -18,12 +18,15 @@ public class Reservation {
                        String remarks, Date reservationDate, Date rentDate,
                        Date returnDate) {
         this.reservationId = reservationId;
-        this.customerId = customerId;
         this.items = items;
         this.remarks = remarks;
         this.reservationDate = reservationDate;
         this.rentDate = rentDate;
         this.returnDate = returnDate;
+
+        // TODO query the parameters for the following variable from DB
+        this.customer = new Customer("String name", "String password",  1, "DOMESTIC", "daw");
+
     }
 
     float getTotal() {
@@ -35,11 +38,6 @@ public class Reservation {
     public int getReservationId() {
         return reservationId;
     }
-
-    public int getCustomerId() {
-        return customerId;
-    }
-
     public ArrayList<Item> getItems() {
         return items;
     }
@@ -93,5 +91,9 @@ public class Reservation {
             this.items.add(item);
             subtotal+=rate;
         }
+    }
+
+    public Customer getCustomer() {
+        return customer;
     }
 }

@@ -1,6 +1,11 @@
 import javax.swing.*;
 import java.awt.*;
-
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Calendar;
+import java.util.Date;
 
 public class PartyRental {
 
@@ -31,6 +36,7 @@ public class PartyRental {
 
         createAccount.addActionListener(e -> customerAccountCreation());
         loginButton.addActionListener(e -> customerPage());
+        clearPasswordTextFields(usernameField, passwordField);
 
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {label, usernameField, passwordField, loginButton, createAccount};
@@ -41,21 +47,62 @@ public class PartyRental {
         navigator.open(panel, "login");
     }
 
+    void clearTextField(JTextField textField) {
+        textField.addMouseListener(new MouseAdapter() {
+            private boolean reset = true;
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (reset) {
+                    textField.setText("");
+                    reset = false;
+                }
+            }
+        });
+
+    }
+    void clearPasswordField(JPasswordField passwordField) {
+        passwordField.addMouseListener(new MouseAdapter() {
+            private boolean reset = true;
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (reset) {
+                    passwordField.setText("");
+                    reset = false;
+                }
+            }
+        });
+
+    }
+    void clearPasswordTextFields(JTextField textField, JPasswordField passwordField) {
+        clearTextField(textField);
+        clearPasswordField(passwordField);
+    }
+
+    void clearManyTexts(JTextField[] textFields) {
+        for(int x = 0; x < textFields.length; x++) {
+            clearTextField(textFields[x]);
+        }
+    }
+
     void customerAccountCreation() {
         JPanel panel = new JPanel(new GridBagLayout());
 
         JLabel label = new JLabel("Account Creation Request");
         label.setHorizontalAlignment(SwingConstants.CENTER);
         JTextField name = new JTextField("Name");
+        JTextField email = new JTextField("Email");
         JPasswordField passwordField = new JPasswordField("Password");
         JComboBox<CustomerType> type = new JComboBox<>(CustomerType.values());
         JButton submit = new JButton("Send Request");
         JButton back = new JButton("Back");
 
         back.addActionListener(e -> navigator.close());
+        clearPasswordTextFields(name, passwordField);
+        clearTextField(email);
+
 
         GuiPlacer placer = new GuiPlacer(400, 500);
-        Component[] elements = {label, name, passwordField, type, submit, back};
+        Component[] elements = {label, name, email, passwordField, type, submit, back};
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
 
@@ -70,26 +117,51 @@ public class PartyRental {
     void customerPage() {
         JPanel panel = new JPanel();
         JButton makeReservationButton = new JButton("Make Reservation");
-        JButton editReservationButton = new JButton("Edit Reservation");
-        JButton cancelReservationButton = new JButton("Cancel Reservation");
+        JButton viewReservationButton = new JButton("View Reservations");
 
         GuiPlacer placer = new GuiPlacer(400, 500);
-        Component[] elements = {makeReservationButton, editReservationButton, cancelReservationButton, };
+        Component[] elements = {makeReservationButton, viewReservationButton, };
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
 
         makeReservationButton.addActionListener(e -> createReservation());
-        cancelReservationButton.addActionListener(e -> cancelReservation());
+        viewReservationButton.addActionListener(e -> viewReservation());
 
         panel.add(container);
         navigator.open(panel, "createAccount");
     }
 
     void createReservation() {
+//        private String remarks;
+//        private final Date reservationDate;
+//        private Date rentDate;
+//        private Date returnDate;
+//        private String internalRemarks;
+//
+//        private float subtotal = 0;
+//        private float gst = 0;
+        JPanel panel = new JPanel();
+
+        JTextField remarks = new JTextField("Remarks");
+        DatePicker datePicker = new DatePicker("Renting Date");
+        JPanel rentDatePanel = datePicker.getPanel();
+        DatePicker datePicker2 = new DatePicker("Return Date");
+        JPanel returnDatePanel = datePicker2.getPanel();
+
+        GuiPlacer placer = new GuiPlacer(400, 500);
+        Component[] elements = {remarks, rentDatePanel, returnDatePanel};
+        placer.verticalPlacer(elements);
+        JPanel container = placer.getContainer();
+
+        JTextField[] texts = {remarks};
+        clearManyTexts(texts);
+
+        panel.add(container);
+        navigator.open(panel, "makeReservation");
 
     }
 
-    void cancelReservation() {
+    void viewReservation() {
 
     }
 
