@@ -1,22 +1,17 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 
 
 public class PartyRental {
 
-    private String username;
-
     private final JFrame mainFrame = new JFrame("Party Rentals");
-    private final Navigator navigator = new Navigator(mainFrame);
-    private CardLayout cardLayout;
-
+    private final CardLayout cardLayout = new CardLayout();
+    private final Navigator navigator = new Navigator(mainFrame, cardLayout);
 
     PartyRental() {
         mainFrame.setSize(800, 700);
 //        mainFrame.minimumSize(new Dimension(700, 600));
         mainFrame.setMinimumSize(new Dimension(700, 700));
-        cardLayout = new CardLayout();
         mainFrame.getContentPane().setLayout(cardLayout);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         loginPage();
@@ -25,60 +20,77 @@ public class PartyRental {
     }
 
     void loginPage() {
-
         JPanel panel = new JPanel(new GridBagLayout());
-        JPanel container = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 1;
-        gbc.weighty = 1;
-
-        // Set the padding as the container's border
-        container.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-
-        container.setPreferredSize(new Dimension(400, 500));
-        panel.add(container, gbc);
-
-        GridBagConstraints gbc2 = new GridBagConstraints();
-        gbc2.gridx = 0;
-        gbc2.gridy = 0;
-        gbc2.fill = GridBagConstraints.HORIZONTAL;
-        gbc2.weightx = 1.0;
 
         JLabel label = new JLabel("Sign In");
+        label.setHorizontalAlignment(SwingConstants.CENTER);
         JTextField usernameField = new JTextField("Username");
         JPasswordField passwordField = new JPasswordField("Password");
         JButton loginButton = new JButton("Login");
         JButton createAccount = new JButton("Create Account");
 
-        createAccount.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                customerAccountCreation();
-            }
-        });
+        createAccount.addActionListener(e -> customerAccountCreation());
+        loginButton.addActionListener(e -> customerPage());
 
-        label.setHorizontalAlignment(JLabel.CENTER);
+        GuiPlacer placer = new GuiPlacer(400, 500);
+        Component[] elements = {label, usernameField, passwordField, loginButton, createAccount};
+        placer.verticalPlacer(elements);
+        JPanel container = placer.getContainer();
 
-        container.add(label);
-        gbc2.gridy = 1;
-        container.add(usernameField, gbc2);
-        gbc2.gridy = 2;
-        container.add(passwordField, gbc2);
-        gbc2.gridy = 3;
-        container.add(loginButton, gbc2);
-        gbc2.gridy = 4;
-        container.add(createAccount, gbc2);
-
-        navigator.open(panel, cardLayout, "login");
+        panel.add(container);
+        navigator.open(panel, "login");
     }
 
     void customerAccountCreation() {
+        JPanel panel = new JPanel(new GridBagLayout());
+
+        JLabel label = new JLabel("Account Creation Request");
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        JTextField name = new JTextField("Name");
+        JPasswordField passwordField = new JPasswordField("Password");
+        JComboBox<CustomerType> type = new JComboBox<>(CustomerType.values());
+        JButton submit = new JButton("Send Request");
+        JButton back = new JButton("Back");
+
+        back.addActionListener(e -> navigator.close());
+
+        GuiPlacer placer = new GuiPlacer(400, 500);
+        Component[] elements = {label, name, passwordField, type, submit, back};
+        placer.verticalPlacer(elements);
+        JPanel container = placer.getContainer();
+
+        panel.add(container);
+        navigator.open(panel, "createAccount");
+    }
+
+    void officerPage() {
+
+    }
+
+    void customerPage() {
         JPanel panel = new JPanel();
+        JButton makeReservationButton = new JButton("Make Reservation");
+        JButton editReservationButton = new JButton("Edit Reservation");
+        JButton cancelReservationButton = new JButton("Cancel Reservation");
 
+        GuiPlacer placer = new GuiPlacer(400, 500);
+        Component[] elements = {makeReservationButton, editReservationButton, cancelReservationButton, };
+        placer.verticalPlacer(elements);
+        JPanel container = placer.getContainer();
 
+        makeReservationButton.addActionListener(e -> createReservation());
+        cancelReservationButton.addActionListener(e -> cancelReservation());
 
-        navigator.open(panel, cardLayout, "createAccount");
+        panel.add(container);
+        navigator.open(panel, "createAccount");
+    }
+
+    void createReservation() {
+
+    }
+
+    void cancelReservation() {
+
     }
 
     public static void main(String[] args) {

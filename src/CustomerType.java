@@ -3,5 +3,5 @@ public enum CustomerType {
     GOVERNMENT,
     DIPLOMATIC,
     PRIVATE,
-    RESORTS;
+    RESORTS
 }
