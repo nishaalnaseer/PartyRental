@@ -9,7 +9,7 @@ public class Reservation {
     private final Date reservationDate;
     private Date rentDate;
     private Date returnDate;
-    private String internalRemarks;
+    private String internalRemarks = "";
 
     private float subtotal = 0;
     private float gst = 0;
