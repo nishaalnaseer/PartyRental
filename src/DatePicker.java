@@ -1,19 +1,20 @@
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 
 public class DatePicker {
     private final JPanel panel;
-    private JComboBox<Integer> dayComboBox;
+    private JComboBox<String> dayComboBox;
     private final JComboBox<String> monthComboBox;
-    private final JComboBox<Integer> yearComboBox;
+    private final JComboBox<String> yearComboBox;
     private final JLabel label;
     final HashMap<String, Integer> monthDays;
 
     DatePicker(String text) {
-        monthComboBox = new JComboBox<>(new String[]{
+        monthComboBox = new JComboBox<>(new String[]{ "Select Month",
                 "January", "February", "March", "April", "May", "June", "July",
                 "August", "September", "October", "November", "December"
         });
@@ -31,15 +32,23 @@ public class DatePicker {
         monthDays.put("September", 30);
         monthDays.put("November", 30);
 //
-        yearComboBox = new JComboBox<>();
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-        for (int i = currentYear; i >= currentYear - 100; i--) {
-            yearComboBox.addItem(i);
+        String[] years = new String[101];
+        years[0] = "Select Year";
+        for (int i = 0; i < 100; i++) {
+            int year = currentYear + i;
+            years[i+1] = Integer.toString(year);
         }
+        yearComboBox = new JComboBox<>(years);
 
         monthComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+//                if (!monthComboBox.getSelectedItem().equals("Select Month")) {
+//                    JOptionPane.showMessageDialog(null, "Select a Month");
+//                    return;
+//                }
+
                 setDays();
             }
         });
@@ -65,14 +74,27 @@ public class DatePicker {
     }
 
     private void setDays() {
-        String month = (String) monthComboBox.getSelectedItem();
-
-        int year;
+        String month;
+        String yearText;
         try {
-            year = (int) yearComboBox.getSelectedItem();
+            yearText = (String) yearComboBox.getSelectedItem();
+            month = (String) monthComboBox.getSelectedItem();
+            assert month != null;
+            if(month.equals("Select Month")) {
+                return;
+            }
         } catch (NullPointerException ex) {
             return;
         }
+
+        int year;
+        try {
+            assert yearText != null;
+            year = Integer.parseInt(yearText);
+        } catch (NumberFormatException ex) {
+            return;
+        }
+
 
         removeDays();
         if (month.equals("February") && (year % 4 == 0)) {
@@ -90,8 +112,10 @@ public class DatePicker {
     }
 
     private void enterDays(int days) {
+        dayComboBox.addItem("Select Day");
+
         for (int i = 1; i <= days; i++) {
-            dayComboBox.addItem(i);
+            dayComboBox.addItem(Integer.toString(i));
         }
     }
 
@@ -100,5 +124,10 @@ public class DatePicker {
         for (int i = itemCount - 1; i >= 0; i--) {
             dayComboBox.removeItemAt(i);
         }
+    }
+
+    String getDate() {
+        String day = (String) dayComboBox.getSelectedItem();
+        return "Hello";
     }
 }
