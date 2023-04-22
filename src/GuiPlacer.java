@@ -19,10 +19,41 @@ public class GuiPlacer {
 
     void verticalPlacer(Component[] items) {
         for(int x = 0; x < items.length; x++) {
-            gbc.gridy++;
             container.add(items[x], gbc);
+            gbc.gridy++;
+        }
+    }
+
+    void horizontalPlacer(Component[] items) {
+        for(int x = 0; x < items.length; x++) {
+            container.add(items[x], gbc);
+            gbc.gridx++;
+        }
+    }
+
+    void vhPlacer(Component[][] items) {
+        for (int y = 0; y < items.length; y++) {
+            Component[] row = items[y];
+            gbc.gridx = 0;
+            for (int x = 0; x < row.length; x++) {
+                container.add(row[x], gbc);
+                gbc.gridx++;
+            }
+            gbc.gridy++;
         }
     }
 
     JPanel getContainer() { return container; }
 }
+
+//    JLabel durationLabel = new JLabel("#days");
+//    JLabel duration = new JLabel("%d%M%YYYY");
+//    JLabel subTotal = new JLabel("Subtotal");
+//    JLabel gstLabel = new JLabel("GST");
+//    JLabel subTotalAmount = new JLabel("amount");
+//    JLabel gstLabelAmount = new JLabel("amount");
+//    JLabel gstRate = new JLabel("gstRate");
+//    JLabel total = new JLabel("Total");
+//    JLabel totalAmount = new JLabel("Total");
+//    JLabel alreadyPaidLabel = new JLabel("Initially Paid");
+//    JLabel alreadyPaidAmount = new JLabel(String.valueOf(rese

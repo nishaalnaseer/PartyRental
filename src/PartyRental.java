@@ -20,6 +20,7 @@ public class PartyRental {
 
     // TODO the following needs to be queried from DB
     ArrayList<Item> items = new ArrayList<>();
+    ArrayList<Reservation> reservations = new ArrayList<>();
 
 
     PartyRental() {
@@ -36,6 +37,42 @@ public class PartyRental {
         items.add(new Item(1, 1, new Date(), "Poopopopo", 50));
         items.add(new Item(1, 1, new Date(), "nooo", 50));
         items.add(new Item(1, 1, new Date(), "this", 50));
+        Item chair = new Item(1, 1, new Date(), "Chair", 50);
+        Item[] tempItems = {
+                chair,
+                new Item(1, 1, new Date(), "Tabke", 50),
+                new Item(1, 1, new Date(), "Poopopopo", 50),
+                new Item(1, 1, new Date(), "nooo", 50),
+                new Item(1, 1, new Date(), "this", 50),
+                chair,
+                new Item(1, 1, new Date(), "Tabke", 50),
+                new Item(1, 1, new Date(), "Poopopopo", 50),
+                new Item(1, 1, new Date(), "nooo", 50),
+                new Item(1, 1, new Date(), "this", 50),
+                new Item(1, 1, new Date(), "Chair", 50),
+                new Item(1, 1, new Date(), "Tabke", 50),
+                new Item(1, 1, new Date(), "Poopopopo", 50),
+                new Item(1, 1, new Date(), "nooo", 50),
+                new Item(1, 1, new Date(), "this", 50),
+                new Item(1, 1, new Date(), "Chair", 50),
+                new Item(1, 1, new Date(), "Tabke", 50),
+                new Item(1, 1, new Date(), "Poopopopo", 50),
+                new Item(1, 1, new Date(), "nooo", 50),
+                new Item(1, 1, new Date(), "last", 50),
+        };
+        reservations.add(new Reservation(1, 1, tempItems, "String remarks", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, tempItems, "String remarks2", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, tempItems, "String remarks3", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, tempItems, "String remarks4", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, tempItems, "String remarks", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, tempItems, "String remarks2", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, tempItems, "String remarks3", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, tempItems, "String remarks4", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, tempItems, "String remarks", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, tempItems, "String remarks2", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, tempItems, "String remarks3", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, tempItems, "String remarks4", new Date(), new Date(), new Date()));
+
 ;
         mainFrame.setVisible(true);
     }
@@ -181,8 +218,6 @@ public class PartyRental {
         JPanel table = new JPanel(new GridBagLayout());
         gbc.weightx = 1;
         gbc.weighty = 0;
-//        table.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-//        table.setPreferredSize(new Dimension(width, height));
         gbc.fill = GridBagConstraints.HORIZONTAL;
         JLabel nameHeading = new JLabel("Item");
         JLabel qtyHeading = new JLabel("Qty");
@@ -331,80 +366,16 @@ public class PartyRental {
 
     }
 
-//    void viewReservation() {
-//        {
-//            // TODO the following data needs to be queried from a DB
-//
-//            ArrayList<Reservation> reservations = new ArrayList<>();
-//            ArrayList<Item> items = new ArrayList<>();
-//            items.add(this.items.get(0));
-//            items.add(this.items.get(1));
-//            items.add(this.items.get(2));
-//            reservations.add(new Reservation(1, 1, items, "String remarks", new Date(), new Date(), new Date()));
-//            reservations.add(new Reservation(1, 1, items, "String remarks2", new Date(), new Date(), new Date()));
-//            reservations.add(new Reservation(1, 1, items, "String remarks3", new Date(), new Date(), new Date()));
-//            reservations.add(new Reservation(1, 1, items, "String remarks4", new Date(), new Date(), new Date()));
-//
-//            JPanel panel = new JPanel();
-//
-//            final GridBagConstraints gbc = new GridBagConstraints();
-//            JPanel table = new JPanel(new GridBagLayout());
-//            gbc.fill = GridBagConstraints.HORIZONTAL;
-//            gbc.weightx = 1;
-//            gbc.weighty = 1;
-//
-//            gbc.gridx = 0;
-//            gbc.gridy = 0;
-//
-//            for (int x = 0; x < reservations.size(); x++) {
-//                gbc.gridx = x;
-//                Reservation reservation = reservations.get(x);
-//                JLabel id = new JLabel(String.valueOf(reservation.getReservationId()));
-//                JLabel name = new JLabel(reservation.getCustomer().getName());
-//                JLabel reserveDate = new JLabel(getFDate(reservation.getReservationDate()));
-//                JLabel rentingDate = new JLabel(getFDate(reservation.getRentDate()));
-//                JLabel returningDate = new JLabel(getFDate(reservation.getReturnDate()));
-//                Component[] elements = {id, name, reserveDate, rentingDate, returningDate};
-//                for (int i = 0; i < elements.length; i++) {
-//                    gbc.gridy = i;
-//                    table.add(elements[x]);
-//                }
-//            }
-//
-//            JScrollPane scrollPane = new JScrollPane();
-//            JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
-//            scrollBar.setUnitIncrement(scrollBar.getUnitIncrement() * 8);
-//            scrollPane.setPreferredSize(new Dimension(400, 200));
-//            scrollPane.setMinimumSize(new Dimension(400, 200));
-//            scrollPane.setViewportView(table);
-//            scrollPane.add(table);
-//
-//            panel.add(table);
-//            navigator.open(panel, "viewReservations");
-//        }
-//    }
-
     void viewReservations() {
-            // TODO the following data needs to be queried from a DB
-
-        ArrayList<Reservation> reservations = new ArrayList<>();
-        ArrayList<Item> items = new ArrayList<>();
-        items.add(this.items.get(0));
-        items.add(this.items.get(1));
-        items.add(this.items.get(2));
-        reservations.add(new Reservation(1, 1, items, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, items, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, items, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, items, "String remarks4", new Date(), new Date(), new Date()));
-
-        JPanel panel = new JPanel();
+        /*
+        function to view all of user's reservations
+         */
+        JPanel panel = new JPanel(new GridBagLayout());
 
         final GridBagConstraints gbc = new GridBagConstraints();
         JPanel table = new JPanel(new GridBagLayout());
         gbc.weightx = 1;
         gbc.weighty = 0;
-//        table.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-//        table.setPreferredSize(new Dimension(width, height));
         gbc.gridy = 0;
 
         JLabel idHeading = new JLabel("ID");
@@ -434,7 +405,11 @@ public class PartyRental {
             JLabel rentingDate = new JLabel(getFDate(reservation.getRentDate()));
             JLabel returningDate = new JLabel(getFDate(reservation.getReservationDate()));
             JButton delete = new JButton("Delete");
-            JComponent[] elements = {id, name, remarks, resrvationDate, rentingDate, returningDate, delete};
+            JButton view = new JButton("View");
+            JComponent[] elements = {
+                    id, name, remarks, resrvationDate, rentingDate, returningDate,
+                    view, delete
+            };
 
             int finalY = y;
             delete.addActionListener(new ActionListener() {
@@ -442,9 +417,14 @@ public class PartyRental {
                 public void actionPerformed(ActionEvent e) {
                     // TODO delete reservation from db
                     reservations.remove(finalY);
-                    for(int x = 0; x < elements.length; x++) {
-                        table.remove(elements[x]);
-                    }
+                    navigator.close();
+                    viewReservations();
+                }
+            });
+            view.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    viewReservation(reservation);
                 }
             });
             for(int x = 0; x < elements.length; x++) {
@@ -456,13 +436,129 @@ public class PartyRental {
         JScrollPane scrollPane = new JScrollPane(table);
         JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
         scrollBar.setUnitIncrement(scrollBar.getUnitIncrement() * 8);
-        scrollPane.setPreferredSize(new Dimension(500, 200));
-        scrollPane.setMinimumSize(new Dimension(500, 200));
+        scrollPane.setPreferredSize(new Dimension(550, 200));
+        scrollPane.setMinimumSize(new Dimension(550, 200));
         scrollPane.setViewportView(table);
 
         panel.add(scrollPane);
         navigator.open(panel, "makeReservation");
     }
+
+    void viewReservation(Reservation reservation) {
+        /*
+        function to view a single reservation
+         */
+
+        Customer client = reservation.getCustomer();
+
+        JLabel id = new JLabel("ID: " + reservation.getReservationId());
+        JLabel clientID = new JLabel("Client ID: " + client.getClientId());
+        JLabel clientName = new JLabel("Client Name: " + client.getName());
+        JLabel remarks = new JLabel("Remarks: " + reservation.getRemarks());
+        JLabel reservationDate = new JLabel("Reservation Date: " + getFDate(reservation.getReservationDate()));
+        JLabel rentDate = new JLabel("Rent Date: " + getFDate(reservation.getRentDate()));
+        JLabel returnDate = new JLabel("Return Date: " + getFDate(reservation.getReturnDate()));
+
+        Component[] elements = {
+                id, clientID, clientName, remarks, reservationDate,
+                rentDate, returnDate
+        };
+        GuiPlacer placer = new GuiPlacer(400, 500);
+        placer.verticalPlacer(elements);
+        JPanel container = placer.getContainer();
+
+        final GridBagConstraints gbc = new GridBagConstraints();
+        JPanel table = new JPanel(new GridBagLayout());
+//        table.setPreferredSize(new Dimension(550, 250));
+//        table.setMinimumSize(new Dimension(550, 250));
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        JLabel nameHeading = new JLabel("Item");
+        JLabel qtyHeading = new JLabel("Qty");
+        JLabel rateHeading = new JLabel("Rate");
+        JLabel amountHeading = new JLabel("Amount");
+
+        JLabel durationLabel = new JLabel("#days");
+        JLabel duration = new JLabel("%d%M%YYYY");
+        JLabel subTotal = new JLabel("Subtotal");
+        JLabel gstLabel = new JLabel("GST");
+        JLabel subTotalAmount = new JLabel("amount");
+        JLabel gstLabelAmount = new JLabel("amount");
+        JLabel gstRate = new JLabel("gstRate");
+        JLabel total = new JLabel("Total");
+        JLabel totalAmount = new JLabel("Total");
+
+        JLabel alreadyPaidLabel = new JLabel("Initially Paid");
+        JLabel alreadyPaidAmount = new JLabel(String.valueOf(reservation.getTotal()));
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
+        scrollBar.setUnitIncrement(scrollBar.getUnitIncrement() * 8);
+        scrollPane.setPreferredSize(new Dimension(550, 200));
+        scrollPane.setMinimumSize(new Dimension(550, 200));
+        scrollPane.setViewportView(table);
+
+        gbc.gridy = 0;
+        gbc.gridx = 0;
+        table.add(nameHeading, gbc);
+        gbc.gridx = 1;
+        table.add(qtyHeading, gbc);
+        gbc.gridx = 2;
+        table.add(rateHeading, gbc);
+        gbc.gridx = 3;
+        table.add(amountHeading, gbc);
+
+        HashMap<Item, Integer> items = reservation.getItems();
+        for(Item item : items.keySet()) {
+//            Item item = items.get(x);
+            JLabel qty = new JLabel(String.valueOf(items.get(item)));
+            JLabel itemName = new JLabel(item.getDescription());
+            JLabel rate = new JLabel(String.valueOf(item.getRate()));
+            JLabel amount = new JLabel(String.valueOf(item.getRate()));
+            gbc.gridy++;
+
+            gbc.gridx = 0;
+            table.add(itemName, gbc);
+            gbc.gridx = 1;
+            table.add(qty, gbc);
+            gbc.gridx = 2;
+            table.add(rate, gbc);
+            gbc.gridx = 3;
+            table.add(amount, gbc);
+        }
+
+        elements = new Component[]{scrollPane};
+        placer.verticalPlacer(elements);
+
+        Component[][] mDElements = {
+                {durationLabel, new Label(" "), new Label(" "), duration},
+                {subTotal, new Label(" "), new Label(" "), subTotalAmount},
+                {gstLabel, new Label(" "), gstRate, gstLabelAmount},
+                {total, new Label(" "), new Label(" "), totalAmount},
+                {alreadyPaidLabel, new Label(" "), new Label(" "), alreadyPaidAmount},
+        };
+        GuiPlacer placer2 = new GuiPlacer(400, 500);
+        placer2.vhPlacer(mDElements);
+        JPanel container2 = placer2.getContainer();
+
+        JButton back = new JButton("Back");
+        back.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                navigator.close();
+            }
+        });
+
+        GuiPlacer main = new GuiPlacer(400, 500);
+        Component[] mainElements = {
+                container, scrollPane, container2, back
+        };
+        main.verticalPlacer(mainElements);
+        JPanel panel = main.getContainer();
+        navigator.open(panel, "viewReservation");
+    }
+
     private String getFDate(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yy");
         return formatter.format(date);
