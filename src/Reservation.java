@@ -10,6 +10,7 @@ public class Reservation {
     private final Date reservationDate;
     private Date rentDate;
     private Date returnDate;
+    private ReservationStatus status;
     private String internalRemarks = "";
 
     private float subtotal = 0;
@@ -17,16 +18,19 @@ public class Reservation {
 
     public Reservation(int reservationId, int customerId, HashMap<Item, Integer> items,
                        String remarks, Date reservationDate, Date rentDate,
-                       Date returnDate) {
+                       Date returnDate, String status) {
         this.reservationId = reservationId;
         this.items = items;
         this.remarks = remarks;
         this.reservationDate = reservationDate;
         this.rentDate = rentDate;
         this.returnDate = returnDate;
+        this.status = ReservationStatus.valueOf(status);
 
         // TODO query the parameters for the following variable from DB
-        this.customer = new Customer("String name", "String password",  1, "DOMESTIC", "daw");
+        this.customer = new Customer(
+                "String name", "String password",  1,
+                "DOMESTIC", "daw", "ENABLED");
 
     }
 
@@ -104,5 +108,13 @@ public class Reservation {
 
     public Customer getCustomer() {
         return customer;
+    }
+
+    String getStatus() {
+        return status.toString();
+    }
+
+    void setStatus(String status) {
+        this.status = ReservationStatus.valueOf(status);
     }
 }

@@ -1,6 +1,4 @@
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -15,7 +13,6 @@ public class PartyRental {
     private final CardLayout cardLayout = new CardLayout();
     private final Navigator navigator = new Navigator(mainFrame, cardLayout);
     JButton back = new JButton("Back");
-
 
     // TODO the following needs to be queried from DB
 //    ArrayList<Item> items = new ArrayList<>();
@@ -50,18 +47,18 @@ public class PartyRental {
         fadas.put(nooo, 7);
         fadas.put(thisItem, 2);
 
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date(), "REQUESTED"));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date(), "REQUESTED"));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date(), "REQUESTED"));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date(), "REQUESTED"));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date(), "REQUESTED"));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date(), "REQUESTED"));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date(), "REQUESTED"));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date(), "REQUESTED"));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date(), "REQUESTED"));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date(), "REQUESTED"));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date(), "REQUESTED"));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date(), "REQUESTED"));
 
         back.addActionListener(new ActionListener() {
             @Override
@@ -84,7 +81,7 @@ public class PartyRental {
         JButton createAccount = new JButton("Create Account");
 
         createAccount.addActionListener(e -> customerAccountCreation());
-        loginButton.addActionListener(e -> customerPage());
+        loginButton.addActionListener(e -> officerPage());
         clearPasswordTextFields(usernameField, passwordField);
 
         GuiPlacer placer = new GuiPlacer(400, 500);
@@ -156,8 +153,205 @@ public class PartyRental {
         navigator.open(panel, "createAccount");
     }
 
-    void officerPage() {
+    JLabel getPadding(int width, int height) {
+        JLabel padding = new JLabel();
+        padding.setPreferredSize(new Dimension(width, height));
+        padding.setMinimumSize(new Dimension(width, height));
+        padding.setMaximumSize(new Dimension(width, height));
+        return padding;
+    }
 
+    void officerPage() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        JButton makeReservationButton = new JButton("Make Reservation");
+        JButton viewReservationButton = new JButton("View Reservations");
+        JButton registrations = new JButton("Approve Registrations");
+        JButton recordReturnOrder = new JButton("Renturn Order");
+        JButton recordRentOrder = new JButton("Rent Order");
+        JLabel padding1 = getPadding(400, 5);
+        JLabel padding2 = getPadding(400, 5);
+        JLabel padding3 = getPadding(400, 5);
+        JLabel padding4 = getPadding(400, 5);
+
+
+        GuiPlacer placer = new GuiPlacer(400, 500);
+        Component[] elements = {
+                registrations, padding1, makeReservationButton,
+                padding2, viewReservationButton, padding3, recordRentOrder,
+                padding4, recordReturnOrder
+        };
+        placer.verticalPlacer(elements);
+        JPanel container = placer.getContainer();
+
+        HashMap<Item, Integer> itemsForReser = new HashMap<>();
+        makeReservationButton.addActionListener(e -> createReservation(itemsForReser));
+        viewReservationButton.addActionListener(e -> viewReservations());
+        registrations.addActionListener(e -> approveRegistration());
+
+
+        panel.add(container);
+        navigator.open(panel, "createAccount");
+    }
+
+//    void approveRegistration() {
+//        Customer customer1 = new Customer("String name", "String password",  1, "DOMESTIC",
+//                "daw", "REQUESTED");
+//        Customer[] customers = {
+//                customer1,
+//                customer1,
+//                customer1,
+//                customer1,
+//                customer1,
+//                customer1,
+//                customer1,
+//                customer1,
+//                customer1,
+//                customer1,
+//                customer1,
+//                customer1,
+//                customer1,
+//                customer1,
+//                customer1,
+//                customer1,
+//        };
+//
+//        JPanel panel = new JPanel(new GridBagLayout());
+//        JLabel nameHeading = new JLabel("Name");
+//        JLabel idHeading = new JLabel("ID");
+//        JLabel typeHeading = new JLabel("Type");
+//        JLabel emailHeading = new JLabel("Email");
+//        JLabel statusHeading = new JLabel("Status");
+//        Component[] elements = {
+//                nameHeading, idHeading, typeHeading,
+//                emailHeading, statusHeading
+//        };
+//
+//        GuiPlacer placer = new GuiPlacer(600, 400);
+//        placer.horizontalPlacer(elements);
+//
+//        for (int x = 0; x < customers.length; x++) {
+//            Customer customer = customers[x];
+//            JLabel name = new JLabel(customer.getName());
+//            JLabel id = new JLabel(Integer.toString(customer.getClientId()));
+//            JLabel type = new JLabel(customer.getType());
+//            JLabel email = new JLabel(customer.getEmail());
+//            JLabel status = new JLabel(customer.getStatus());
+//            JButton approve = new JButton("Approve");
+//            JButton delete = new JButton("Delete");
+//
+//            approve.addActionListener(new ActionListener() {
+//                @Override
+//                public void actionPerformed(ActionEvent e) {
+//
+//                }
+//            });
+//            delete.addActionListener(new ActionListener() {
+//                @Override
+//                public void actionPerformed(ActionEvent e) {
+//
+//                }
+//            });
+//
+//
+//            Component[] row = {name, id, type, email, status, approve, delete};
+//            placer.horizontalPlacer(row);
+//        }
+//
+//        JPanel table = placer.getContainer();
+//        JScrollPane scrollPane = new JScrollPane(table);
+//        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
+//        scrollBar.setUnitIncrement(scrollBar.getUnitIncrement() * 8);
+//        scrollPane.setPreferredSize(new Dimension(620, 200));
+//        scrollPane.setMinimumSize(new Dimension(620, 200));
+//        scrollPane.setViewportView(table);
+//
+//        panel.add(scrollPane);
+//        navigator.open(panel, "customerApproval");
+//    }
+
+    void approveRegistration() {
+        /*
+        function to view all of user's reservations
+         */
+        JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc2 = new GridBagConstraints();
+        gbc2.weightx = 1;
+        gbc2.weighty = 0;
+        gbc2.gridy = 0;
+        gbc2.gridx = 0;
+
+        final GridBagConstraints gbc = new GridBagConstraints();
+        JPanel table = new JPanel(new GridBagLayout());
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+        gbc.gridy = 0;
+
+        JLabel idHeading = new JLabel("ID");
+        JLabel nameHeading = new JLabel("Name");
+        JLabel remarksHeading = new JLabel("Remarks");
+        JLabel reservationDateHeading = new JLabel("Reserved");
+        JLabel rentingDateHeading = new JLabel("Renting");
+        JLabel returningDateHeading = new JLabel("Returning");
+        JComponent[] headingElements = {
+                idHeading, nameHeading, remarksHeading, remarksHeading,
+                reservationDateHeading, rentingDateHeading, returningDateHeading};
+        for(int x = 0; x < headingElements.length; x++) {
+            gbc.gridx = x;
+            table.add(headingElements[x]);
+        }
+        gbc.gridy++;
+        int y;
+
+        for(y = 0; y < reservations.size(); y++) {
+//            1, 1, items, "String remarks", new Date(), new Date(), new Date()
+            gbc.gridy++;
+            Reservation reservation = reservations.get(y);
+            JLabel id = new JLabel(Integer.toString(reservation.getReservationId()));
+            JLabel name = new JLabel(reservation.getCustomer().getName());
+            JLabel remarks = new JLabel(reservation.getRemarks());
+            JLabel resrvationDate = new JLabel(getFDate(reservation.getReservationDate()));
+            JLabel rentingDate = new JLabel(getFDate(reservation.getRentDate()));
+            JLabel returningDate = new JLabel(getFDate(reservation.getReservationDate()));
+            JButton delete = new JButton("Delete");
+            JButton view = new JButton("View");
+            JComponent[] elements = {
+                    id, name, remarks, resrvationDate, rentingDate, returningDate,
+                    view, delete
+            };
+
+            int finalY = y;
+            delete.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    // TODO delete reservation from db
+                    reservations.remove(finalY);
+                    navigator.close();
+                    viewReservations();
+                }
+            });
+            view.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    viewReservation(reservation);
+                }
+            });
+            for(int x = 0; x < elements.length; x++) {
+                gbc.gridx = x;
+                table.add(elements[x], gbc);
+            }
+        }
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
+        scrollBar.setUnitIncrement(scrollBar.getUnitIncrement() * 8);
+        scrollPane.setPreferredSize(new Dimension(550, 200));
+        scrollPane.setMinimumSize(new Dimension(550, 200));
+        scrollPane.setViewportView(table);
+
+        panel.add(scrollPane, gbc2);
+        gbc2.gridy = 1;
+        panel.add(back, gbc2);
+        navigator.open(panel, "makeReservation");
     }
 
     void customerPage() {
@@ -455,9 +649,10 @@ public class PartyRental {
         JLabel reservationDate = new JLabel("Reservation Date: " + getFDate(reservation.getReservationDate()));
         JLabel rentDate = new JLabel("Rent Date: " + getFDate(reservation.getRentDate()));
         JLabel returnDate = new JLabel("Return Date: " + getFDate(reservation.getReturnDate()));
+        JLabel status = new JLabel("Status: " + reservation.getStatus());
 
         Component[] elements = {
-                id, clientID, clientName, remarks, reservationDate,
+                id, clientID, clientName, status, remarks, reservationDate,
                 rentDate, returnDate
         };
         GuiPlacer placer = new GuiPlacer(400, 500);

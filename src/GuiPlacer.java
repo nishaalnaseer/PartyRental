@@ -26,9 +26,10 @@ public class GuiPlacer {
 
     void horizontalPlacer(Component[] items) {
         for(int x = 0; x < items.length; x++) {
+            gbc.gridx = x;
             container.add(items[x], gbc);
-            gbc.gridx++;
         }
+        gbc.gridy++;
     }
 
     void vhPlacer(Component[][] items) {

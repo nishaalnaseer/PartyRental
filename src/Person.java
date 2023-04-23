@@ -3,10 +3,13 @@ public class Person {
     private String password;
     private final String email;
 
-    Person(String name, String password, String email) {
+    private AccountStatus status;
+
+    Person(String name, String password, String email, String status) {
         this.name = name;
         this.password = password;
         this.email = email;
+        this.status = AccountStatus.valueOf(status);
     }
     String getName() { return name; }
     boolean verifyPassword(String enteredPass) {
@@ -15,6 +18,14 @@ public class Person {
 
     public String getEmail() {
         return email;
+    }
+
+    void setStatus(String status) {
+        this.status = AccountStatus.valueOf(status);
+    }
+
+    String getStatus() {
+        return status.toString();
     }
 
     public void changePassword(String password) {
