@@ -7,21 +7,21 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 
 public class PartyRental {
 
     private final JFrame mainFrame = new JFrame("Party Rentals");
     private final CardLayout cardLayout = new CardLayout();
     private final Navigator navigator = new Navigator(mainFrame, cardLayout);
+    JButton back = new JButton("Back");
+
 
     // TODO the following needs to be queried from DB
-    ArrayList<Item> items = new ArrayList<>();
+//    ArrayList<Item> items = new ArrayList<>();
+    HashMap<String, Item> items = new HashMap<>();
+    // TODO following needs to be removed from production
     ArrayList<Reservation> reservations = new ArrayList<>();
-
 
     PartyRental() {
         mainFrame.setSize(800, 700);
@@ -32,48 +32,44 @@ public class PartyRental {
         loginPage();
 
         // TODO the following needs to be queried from DB on runtime not on app init
-        items.add(new Item(1, 1, new Date(), "Chair", 50));
-        items.add(new Item(1, 1, new Date(), "Tabke", 50));
-        items.add(new Item(1, 1, new Date(), "Poopopopo", 50));
-        items.add(new Item(1, 1, new Date(), "nooo", 50));
-        items.add(new Item(1, 1, new Date(), "this", 50));
         Item chair = new Item(1, 1, new Date(), "Chair", 50);
-        Item[] tempItems = {
-                chair,
-                new Item(1, 1, new Date(), "Tabke", 50),
-                new Item(1, 1, new Date(), "Poopopopo", 50),
-                new Item(1, 1, new Date(), "nooo", 50),
-                new Item(1, 1, new Date(), "this", 50),
-                chair,
-                new Item(1, 1, new Date(), "Tabke", 50),
-                new Item(1, 1, new Date(), "Poopopopo", 50),
-                new Item(1, 1, new Date(), "nooo", 50),
-                new Item(1, 1, new Date(), "this", 50),
-                new Item(1, 1, new Date(), "Chair", 50),
-                new Item(1, 1, new Date(), "Tabke", 50),
-                new Item(1, 1, new Date(), "Poopopopo", 50),
-                new Item(1, 1, new Date(), "nooo", 50),
-                new Item(1, 1, new Date(), "this", 50),
-                new Item(1, 1, new Date(), "Chair", 50),
-                new Item(1, 1, new Date(), "Tabke", 50),
-                new Item(1, 1, new Date(), "Poopopopo", 50),
-                new Item(1, 1, new Date(), "nooo", 50),
-                new Item(1, 1, new Date(), "last", 50),
-        };
-        reservations.add(new Reservation(1, 1, tempItems, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, tempItems, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, tempItems, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, tempItems, "String remarks4", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, tempItems, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, tempItems, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, tempItems, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, tempItems, "String remarks4", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, tempItems, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, tempItems, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, tempItems, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, tempItems, "String remarks4", new Date(), new Date(), new Date()));
+        Item table = new Item(1, 1, new Date(), "Tabke", 50);
+        Item poopoo = new Item(1, 1, new Date(), "Poopopopo", 50);
+        Item nooo = new Item(1, 1, new Date(), "nooo", 50);
+        Item thisItem = new Item(1, 1, new Date(), "this", 50);
+        items.put(chair.getDescription(), chair);
+        items.put(table.getDescription(), table);
+        items.put(poopoo.getDescription(), poopoo);
+        items.put(nooo.getDescription(), nooo);
+        items.put(thisItem.getDescription(), thisItem);
 
-;
+        HashMap<Item, Integer> fadas = new HashMap<>();
+        fadas.put(chair, 3);
+        fadas.put(table, 2);
+        fadas.put(poopoo, 4);
+        fadas.put(nooo, 7);
+        fadas.put(thisItem, 2);
+
+        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+
+        back.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                navigator.close();
+            }
+        });
+
         mainFrame.setVisible(true);
     }
 
@@ -147,12 +143,9 @@ public class PartyRental {
         JPasswordField passwordField = new JPasswordField("Password");
         JComboBox<CustomerType> type = new JComboBox<>(CustomerType.values());
         JButton submit = new JButton("Send Request");
-        JButton back = new JButton("Back");
 
-        back.addActionListener(e -> navigator.close());
         clearPasswordTextFields(name, passwordField);
         clearTextField(email);
-
 
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {label, name, email, passwordField, type, submit, back};
@@ -177,42 +170,19 @@ public class PartyRental {
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
 
-        makeReservationButton.addActionListener(e -> createReservation());
+        HashMap<Item, Integer> itemsForReser = new HashMap<>();
+        makeReservationButton.addActionListener(e -> createReservation(itemsForReser));
         viewReservationButton.addActionListener(e -> viewReservations());
 
         panel.add(container);
         navigator.open(panel, "createAccount");
     }
 
-    void createReservation() {
+    void createReservation(HashMap<Item, Integer> itemsForReser) {
         // TODO this code below needs to be queried form DB
-        final HashMap<String, Integer> items = new HashMap<>();
-        items.put("chair1", 5);
-        items.put("table2", 5);
-        items.put("chair3", 5);
-        items.put("table4", 5);
-        items.put("chair5", 5);
-        items.put("table6", 5);
-        items.put("chair7", 5);
-        items.put("table8", 5);
-        items.put("chair9", 5);
-        items.put("table10", 5);
-        items.put("chair11", 5);
-        items.put("table12", 5);
-        items.put("chair13", 5);
-        items.put("table14", 5);
-        items.put("chair15", 5);
-        items.put("table16", 5);
-        items.put("chair17", 5);
-        items.put("table18", 5);
-        items.put("chair19", 5);
-        items.put("table20", 5);
-        items.put("chair21", 5);
-        items.put("table22", 5);
-        items.put("chair23", 5);
-        items.put("table24", 5);
 
         JPanel panel = new JPanel();
+//        HashMap<Item, Integer> itemsForReser = new HashMap<>();
 
         final GridBagConstraints gbc = new GridBagConstraints();
         JPanel table = new JPanel(new GridBagLayout());
@@ -230,7 +200,7 @@ public class PartyRental {
         JLabel totalAmount = new JLabel("Total");
 
         JComboBox<String> itemDropDown = new JComboBox<>();
-        for (Item item : this.items) {
+        for (Item item : this.items.values()) {
             itemDropDown.addItem(item.getDescription());
         }
         JTextField qty = new JTextField("Quantity");
@@ -241,6 +211,34 @@ public class PartyRental {
         itemAdder.add(itemDropDown);
         itemAdder.add(qty);
         itemAdder.add(add);
+        add.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String itemDesc = (String) itemDropDown.getSelectedItem();
+                if(itemDesc == null) {
+                    return;
+                }
+                Item item = items.get(itemDesc);
+
+                int amount;
+                try {
+                    amount = Integer.parseInt(qty.getText());
+                } catch (NumberFormatException ex) {
+                    return;
+                }
+
+                int prevQty;
+                try {
+                    prevQty = itemsForReser.get(item);
+                    prevQty += amount;
+                } catch (NullPointerException ex) {
+                    prevQty = amount;
+                }
+                itemsForReser.put(item, prevQty);
+                navigator.close();
+                createReservation(itemsForReser);
+            }
+        });
 
         gbc.gridy = 0;
         gbc.gridx = 0;
@@ -249,10 +247,10 @@ public class PartyRental {
         table.add(qtyHeading, gbc);
         gbc.gridy = 1;
 
-        for(String key : items.keySet()) {
-            Integer value = items.get(key);
+        for(Item item : itemsForReser.keySet()) {
+            Integer value = itemsForReser.get(item);
 
-            JLabel name =  new JLabel(key);
+            JLabel name =  new JLabel(item.getDescription());
             JLabel valueHolder =  new JLabel(value.toString());
             JLabel rate =  new JLabel("rate");
             JLabel amount =  new JLabel("amount");
@@ -263,7 +261,8 @@ public class PartyRental {
             delete.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    items.remove(key);
+                    itemsForReser.remove(item);
+                    createReservation(itemsForReser);
                 }
             });
             edit.addActionListener(new ActionListener() {
@@ -276,7 +275,7 @@ public class PartyRental {
                         if (input != null) {
                             try {
                                 newAmount = Integer.parseInt(input);
-                                items.put(key, newAmount);
+                                itemsForReser.put(item, newAmount);
                                 valueHolder.setText(String.valueOf(newAmount));
                                 return;
                             } catch (NumberFormatException ex) {
@@ -321,7 +320,6 @@ public class PartyRental {
         DatePicker datePicker2 = new DatePicker("Return Date");
         JPanel returnDatePanel = datePicker2.getPanel();
         JButton submit = new JButton("Submit");
-        JButton back = new JButton("Back");
 
         gbc.gridx = 0;
         table.add(subTotal, gbc);
@@ -341,14 +339,6 @@ public class PartyRental {
         table.add(total, gbc);
         gbc.gridx = 3;
         table.add(totalAmount, gbc);
-
-
-        back.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                navigator.close();
-            }
-        });
 
         GuiPlacer placer = new GuiPlacer(400, 800);
         Component[] elements = {
@@ -371,6 +361,11 @@ public class PartyRental {
         function to view all of user's reservations
          */
         JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc2 = new GridBagConstraints();
+        gbc2.weightx = 1;
+        gbc2.weighty = 0;
+        gbc2.gridy = 0;
+        gbc2.gridx = 0;
 
         final GridBagConstraints gbc = new GridBagConstraints();
         JPanel table = new JPanel(new GridBagLayout());
@@ -440,7 +435,9 @@ public class PartyRental {
         scrollPane.setMinimumSize(new Dimension(550, 200));
         scrollPane.setViewportView(table);
 
-        panel.add(scrollPane);
+        panel.add(scrollPane, gbc2);
+        gbc2.gridy = 1;
+        panel.add(back, gbc2);
         navigator.open(panel, "makeReservation");
     }
 
@@ -469,8 +466,6 @@ public class PartyRental {
 
         final GridBagConstraints gbc = new GridBagConstraints();
         JPanel table = new JPanel(new GridBagLayout());
-//        table.setPreferredSize(new Dimension(550, 250));
-//        table.setMinimumSize(new Dimension(550, 250));
         gbc.weightx = 1;
         gbc.weighty = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -542,17 +537,21 @@ public class PartyRental {
         placer2.vhPlacer(mDElements);
         JPanel container2 = placer2.getContainer();
 
-        JButton back = new JButton("Back");
-        back.addActionListener(new ActionListener() {
+        JButton delete = new JButton("Delete");
+        delete.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // todo delete item from DB
                 navigator.close();
+                navigator.close();
+                viewReservations();
             }
         });
+        new DatePicker("okay").print("hello");
 
         GuiPlacer main = new GuiPlacer(400, 500);
         Component[] mainElements = {
-                container, scrollPane, container2, back
+                container, scrollPane, container2, delete, back
         };
         main.verticalPlacer(mainElements);
         JPanel panel = main.getContainer();

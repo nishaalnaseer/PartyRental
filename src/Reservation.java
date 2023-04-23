@@ -5,7 +5,7 @@ import java.util.HashMap;
 public class Reservation {
     private final int reservationId;
     private final Customer customer;
-    private final HashMap<Item, Integer> items = new HashMap<>();
+    private HashMap<Item, Integer> items = new HashMap<>();
     private String remarks;
     private final Date reservationDate;
     private Date rentDate;
@@ -15,11 +15,11 @@ public class Reservation {
     private float subtotal = 0;
     private float gst = 0;
 
-    public Reservation(int reservationId, int customerId, Item[] items,
+    public Reservation(int reservationId, int customerId, HashMap<Item, Integer> items,
                        String remarks, Date reservationDate, Date rentDate,
                        Date returnDate) {
         this.reservationId = reservationId;
-        addItems(items);
+        this.items = items;
         this.remarks = remarks;
         this.reservationDate = reservationDate;
         this.rentDate = rentDate;
