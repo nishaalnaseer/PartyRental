@@ -13,6 +13,7 @@ public class PartyRental {
     private final CardLayout cardLayout = new CardLayout();
     private final Navigator navigator = new Navigator(mainFrame, cardLayout);
     JButton back = new JButton("Back");
+    JButton logout = new JButton("Logout");
 
     // TODO the following needs to be queried from DB
 //    ArrayList<Item> items = new ArrayList<>();
@@ -66,6 +67,13 @@ public class PartyRental {
                 navigator.close();
             }
         });
+        logout.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                navigator.close();
+            }
+        });
+
 
         mainFrame.setVisible(true);
     }
@@ -178,7 +186,7 @@ public class PartyRental {
         Component[] elements = {
                 registrations, padding1, makeReservationButton,
                 padding2, viewReservationButton, padding3, recordRentOrder,
-                padding4, recordReturnOrder
+                padding4, recordReturnOrder, getPadding(5, 5), logout
         };
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
@@ -193,86 +201,31 @@ public class PartyRental {
         navigator.open(panel, "createAccount");
     }
 
-//    void approveRegistration() {
-//        Customer customer1 = new Customer("String name", "String password",  1, "DOMESTIC",
-//                "daw", "REQUESTED");
-//        Customer[] customers = {
-//                customer1,
-//                customer1,
-//                customer1,
-//                customer1,
-//                customer1,
-//                customer1,
-//                customer1,
-//                customer1,
-//                customer1,
-//                customer1,
-//                customer1,
-//                customer1,
-//                customer1,
-//                customer1,
-//                customer1,
-//                customer1,
-//        };
-//
-//        JPanel panel = new JPanel(new GridBagLayout());
-//        JLabel nameHeading = new JLabel("Name");
-//        JLabel idHeading = new JLabel("ID");
-//        JLabel typeHeading = new JLabel("Type");
-//        JLabel emailHeading = new JLabel("Email");
-//        JLabel statusHeading = new JLabel("Status");
-//        Component[] elements = {
-//                nameHeading, idHeading, typeHeading,
-//                emailHeading, statusHeading
-//        };
-//
-//        GuiPlacer placer = new GuiPlacer(600, 400);
-//        placer.horizontalPlacer(elements);
-//
-//        for (int x = 0; x < customers.length; x++) {
-//            Customer customer = customers[x];
-//            JLabel name = new JLabel(customer.getName());
-//            JLabel id = new JLabel(Integer.toString(customer.getClientId()));
-//            JLabel type = new JLabel(customer.getType());
-//            JLabel email = new JLabel(customer.getEmail());
-//            JLabel status = new JLabel(customer.getStatus());
-//            JButton approve = new JButton("Approve");
-//            JButton delete = new JButton("Delete");
-//
-//            approve.addActionListener(new ActionListener() {
-//                @Override
-//                public void actionPerformed(ActionEvent e) {
-//
-//                }
-//            });
-//            delete.addActionListener(new ActionListener() {
-//                @Override
-//                public void actionPerformed(ActionEvent e) {
-//
-//                }
-//            });
-//
-//
-//            Component[] row = {name, id, type, email, status, approve, delete};
-//            placer.horizontalPlacer(row);
-//        }
-//
-//        JPanel table = placer.getContainer();
-//        JScrollPane scrollPane = new JScrollPane(table);
-//        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
-//        scrollBar.setUnitIncrement(scrollBar.getUnitIncrement() * 8);
-//        scrollPane.setPreferredSize(new Dimension(620, 200));
-//        scrollPane.setMinimumSize(new Dimension(620, 200));
-//        scrollPane.setViewportView(table);
-//
-//        panel.add(scrollPane);
-//        navigator.open(panel, "customerApproval");
-//    }
-
     void approveRegistration() {
         /*
-        function to view all of user's reservations
+        function to approve/delete a customers registration request
          */
+        // TODO the following needs to be queried from a DB
+        Customer customer1 = new Customer("String name", "String password",  1, "DOMESTIC",
+                "daw", "REQUESTED");
+        Customer[] customers = {
+                customer1,
+                customer1,
+                customer1,
+                customer1,
+                customer1,
+                customer1,
+                customer1,
+                customer1,
+                customer1,
+                customer1,
+                customer1,
+                customer1,
+                customer1,
+                customer1,
+                customer1,
+                customer1,
+        };
         JPanel panel = new JPanel(new GridBagLayout());
         final GridBagConstraints gbc2 = new GridBagConstraints();
         gbc2.weightx = 1;
@@ -288,13 +241,12 @@ public class PartyRental {
 
         JLabel idHeading = new JLabel("ID");
         JLabel nameHeading = new JLabel("Name");
-        JLabel remarksHeading = new JLabel("Remarks");
-        JLabel reservationDateHeading = new JLabel("Reserved");
-        JLabel rentingDateHeading = new JLabel("Renting");
-        JLabel returningDateHeading = new JLabel("Returning");
+        JLabel typeHeading = new JLabel("Type");
+        JLabel emailHeading = new JLabel("Email");
+        JLabel statusHeading = new JLabel("Status");
         JComponent[] headingElements = {
-                idHeading, nameHeading, remarksHeading, remarksHeading,
-                reservationDateHeading, rentingDateHeading, returningDateHeading};
+                idHeading, nameHeading, typeHeading, emailHeading,
+                statusHeading};
         for(int x = 0; x < headingElements.length; x++) {
             gbc.gridx = x;
             table.add(headingElements[x]);
@@ -302,39 +254,26 @@ public class PartyRental {
         gbc.gridy++;
         int y;
 
-        for(y = 0; y < reservations.size(); y++) {
+        for(y = 0; y < customers.length; y++) {
 //            1, 1, items, "String remarks", new Date(), new Date(), new Date()
             gbc.gridy++;
-            Reservation reservation = reservations.get(y);
-            JLabel id = new JLabel(Integer.toString(reservation.getReservationId()));
-            JLabel name = new JLabel(reservation.getCustomer().getName());
-            JLabel remarks = new JLabel(reservation.getRemarks());
-            JLabel resrvationDate = new JLabel(getFDate(reservation.getReservationDate()));
-            JLabel rentingDate = new JLabel(getFDate(reservation.getRentDate()));
-            JLabel returningDate = new JLabel(getFDate(reservation.getReservationDate()));
-            JButton delete = new JButton("Delete");
-            JButton view = new JButton("View");
+            Customer customer = customers[y];
+            JLabel id = new JLabel(Integer.toString(customer.getClientId()));
+            JLabel name = new JLabel(customer.getName());
+            JLabel type = new JLabel(customer.getType());
+            JLabel email = new JLabel(customer.getEmail());
+            JLabel status = new JLabel(customer.getStatus());
+            JButton view = new JButton("View Details");
             JComponent[] elements = {
-                    id, name, remarks, resrvationDate, rentingDate, returningDate,
-                    view, delete
+                    id, name, type, email, status, view
             };
-
-            int finalY = y;
-            delete.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    // TODO delete reservation from db
-                    reservations.remove(finalY);
-                    navigator.close();
-                    viewReservations();
-                }
-            });
             view.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    viewReservation(reservation);
+                    customerApproveReject(customer);
                 }
             });
+
             for(int x = 0; x < elements.length; x++) {
                 gbc.gridx = x;
                 table.add(elements[x], gbc);
@@ -354,13 +293,62 @@ public class PartyRental {
         navigator.open(panel, "makeReservation");
     }
 
+    void customerApproveReject(Customer customer) {
+        JLabel id = new JLabel("id: " + customer.getClientId());
+        JLabel name = new JLabel("Name: " + customer.getName());
+        JLabel email = new JLabel("Name: " + customer.getEmail());
+        JLabel type = new JLabel("Type: " + customer.getType());
+        JLabel status = new JLabel("Name: " + customer.getName());
+        JButton approve = new JButton("Approve");
+        JButton reject = new JButton("Reject");
+        JButton back = new JButton("Back");
+        Component[] elements = {
+                id, name, email, type, status, getPadding(40, 5),
+                approve, getPadding(40, 5), reject, getPadding(40, 5),
+                back
+        };
+        back.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                navigator.close();
+            }
+        });
+        approve.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // TODO query db accordingly
+                navigator.close();
+            }
+        });
+        reject.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // TODO query db accordingly
+                navigator.close();
+            }
+        });
+
+        GuiPlacer placer = new GuiPlacer(400, 600);
+        placer.verticalPlacer(elements);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        JPanel container = placer.getContainer();
+        panel.add(container);
+
+        navigator.open(panel, "customerApproveReject");
+    }
+
     void customerPage() {
         JPanel panel = new JPanel();
         JButton makeReservationButton = new JButton("Make Reservation");
         JButton viewReservationButton = new JButton("View Reservations");
 
         GuiPlacer placer = new GuiPlacer(400, 500);
-        Component[] elements = {makeReservationButton, viewReservationButton, };
+        Component[] elements = {
+                makeReservationButton, getPadding(10, 5),
+                viewReservationButton, getPadding(10, 5),
+                logout
+        };
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
 
