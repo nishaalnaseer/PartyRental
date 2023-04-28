@@ -48,18 +48,18 @@ public class PartyRental {
         fadas.put(nooo, 7);
         fadas.put(thisItem, 2);
 
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date(), "REQUESTED"));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date(), "REQUESTED"));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date(), "REQUESTED"));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date(), "REQUESTED"));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date(), "REQUESTED"));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date(), "REQUESTED"));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date(), "REQUESTED"));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date(), "REQUESTED"));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date(), "REQUESTED"));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date(), "REQUESTED"));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date(), "REQUESTED"));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date(), "REQUESTED"));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
 
         back.addActionListener(new ActionListener() {
             @Override
@@ -193,7 +193,7 @@ public class PartyRental {
 
         HashMap<Item, Integer> itemsForReser = new HashMap<>();
         makeReservationButton.addActionListener(e -> createReservation(itemsForReser));
-        viewReservationButton.addActionListener(e -> viewReservations());
+        viewReservationButton.addActionListener(e -> viewReservations("officer"));
         registrations.addActionListener(e -> approveRegistration());
 
 
@@ -354,7 +354,7 @@ public class PartyRental {
 
         HashMap<Item, Integer> itemsForReser = new HashMap<>();
         makeReservationButton.addActionListener(e -> createReservation(itemsForReser));
-        viewReservationButton.addActionListener(e -> viewReservations());
+        viewReservationButton.addActionListener(e -> viewReservations("customer"));
 
         panel.add(container);
         navigator.open(panel, "createAccount");
@@ -538,7 +538,7 @@ public class PartyRental {
 
     }
 
-    void viewReservations() {
+    void viewReservations(String userType) {
         /*
         function to view all of user's reservations
          */
@@ -578,13 +578,13 @@ public class PartyRental {
             JLabel id = new JLabel(Integer.toString(reservation.getReservationId()));
             JLabel name = new JLabel(reservation.getCustomer().getName());
             JLabel remarks = new JLabel(reservation.getRemarks());
-            JLabel resrvationDate = new JLabel(getFDate(reservation.getReservationDate()));
+            JLabel reservationDate = new JLabel(getFDate(reservation.getReservationDate()));
             JLabel rentingDate = new JLabel(getFDate(reservation.getRentDate()));
             JLabel returningDate = new JLabel(getFDate(reservation.getReservationDate()));
             JButton delete = new JButton("Delete");
             JButton view = new JButton("View");
             JComponent[] elements = {
-                    id, name, remarks, resrvationDate, rentingDate, returningDate,
+                    id, name, remarks, reservationDate, rentingDate, returningDate,
                     view, delete
             };
 
@@ -595,13 +595,13 @@ public class PartyRental {
                     // TODO delete reservation from db
                     reservations.remove(finalY);
                     navigator.close();
-                    viewReservations();
+                    viewReservations(userType);
                 }
             });
             view.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    viewReservation(reservation);
+                    viewReservation(reservation, userType);
                 }
             });
             for(int x = 0; x < elements.length; x++) {
@@ -623,7 +623,7 @@ public class PartyRental {
         navigator.open(panel, "makeReservation");
     }
 
-    void viewReservation(Reservation reservation) {
+    void viewReservation(Reservation reservation, String userType) {
         /*
         function to view a single reservation
          */
@@ -727,15 +727,23 @@ public class PartyRental {
                 // todo delete item from DB
                 navigator.close();
                 navigator.close();
-                viewReservations();
+                viewReservations(userType);
             }
         });
         new DatePicker("okay").print("hello");
 
         GuiPlacer main = new GuiPlacer(400, 500);
-        Component[] mainElements = {
-                container, scrollPane, container2, delete, back
-        };
+        Component[] mainElements;
+        if (userType.equals("customer")) {
+            mainElements = new Component[]{
+                    container, scrollPane, container2, delete, back
+            };
+        } else {
+            JButton approve = new JButton("Approve");
+            mainElements = new Component[]{
+                    container, scrollPane, container2, approve, delete, back
+            };
+        }
         main.verticalPlacer(mainElements);
         JPanel panel = main.getContainer();
         navigator.open(panel, "viewReservation");

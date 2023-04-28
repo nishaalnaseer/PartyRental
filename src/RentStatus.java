@@ -1,4 +1,5 @@
 public enum RentStatus {
     RENTED,
-    RETURNED
+    RETURNED,
+    CANCELLED
 }

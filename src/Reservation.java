@@ -18,14 +18,14 @@ public class Reservation {
 
     public Reservation(int reservationId, int customerId, HashMap<Item, Integer> items,
                        String remarks, Date reservationDate, Date rentDate,
-                       Date returnDate, String status) {
+                       Date returnDate) {
         this.reservationId = reservationId;
         this.items = items;
         this.remarks = remarks;
         this.reservationDate = reservationDate;
         this.rentDate = rentDate;
         this.returnDate = returnDate;
-        this.status = ReservationStatus.valueOf(status);
+        this.status = ReservationStatus.valueOf("REQUESTED");
 
         // TODO query the parameters for the following variable from DB
         this.customer = new Customer(
