@@ -1,10 +1,12 @@
 public class RentOrder {
     private final Reservation reservation;
     private final int rentOrderId;
+    private RentStatus status;
 
-    public RentOrder(Reservation reservation, int rentOrderId) {
+    public RentOrder(Reservation reservation, int rentOrderId, String status) {
         this.reservation = reservation;
         this.rentOrderId = rentOrderId;
+        setStatus(status);
     }
 
     public int getRentOrderId() {
@@ -20,9 +22,9 @@ public class RentOrder {
     }
 
     String getStatus() {
-        return reservation.getStatus();
+        return status.toString();
     }
     void setStatus(String status) {
-        reservation.setStatus(status);
+        this.status = RentStatus.valueOf(status);
     }
 }
