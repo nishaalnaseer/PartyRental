@@ -1,11 +1,13 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import org.mariadb.jdbc.Driver;
 
 public class PartyRental {
 
@@ -21,12 +23,26 @@ public class PartyRental {
     // TODO following needs to be removed from production
     ArrayList<Reservation> reservations = new ArrayList<>();
 
-    PartyRental() {
+    Connection connection;
+
+    PartyRental() throws SQLException {
+        DriverManager.registerDriver(new Driver());
+        connection = DriverManager.getConnection("jdbc:mariadb://localhost:3306/party_rental", "root", "123");
+        mainFrame.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e)  {
+                try {
+                    connection.close();
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        } );
+
         mainFrame.setSize(800, 700);
-//        mainFrame.minimumSize(new Dimension(700, 600));
         mainFrame.setMinimumSize(new Dimension(700, 700));
         mainFrame.getContentPane().setLayout(cardLayout);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         loginPage();
 
         // TODO the following needs to be queried from DB on runtime not on app init
@@ -1122,7 +1138,7 @@ public class PartyRental {
         return formatter.format(date);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         new PartyRental();
     }
 }
