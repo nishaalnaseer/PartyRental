@@ -858,7 +858,142 @@ public class PartyRental {
     }
 
     void adminPage() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        JButton management = new JButton("User Management");
+        JButton sales = new JButton("Sales Report");
+        JButton inventory = new JButton("Inventory Management");
+        JButton importData = new JButton("Import Data");
+        JButton twitterScrape = new JButton("Search Twitter");
 
+        management.addActionListener(e -> userManagement());
+
+        GuiPlacer placer = new GuiPlacer(400, 500);
+        Component[] elements = {
+                management, getPadding(10, 5),
+                sales, getPadding(10, 5),
+                inventory, getPadding(10, 5),
+                importData, getPadding(10, 5),
+                twitterScrape, getPadding(10, 5),
+                logout
+        };
+        placer.verticalPlacer(elements);
+        JPanel container = placer.getContainer();
+
+        panel.add(container);
+        navigator.open(panel, "createAccount");
+    }
+
+    private void addUser(){
+        JPanel panel = new JPanel(new GridBagLayout());
+        JComboBox<Role> role = new JComboBox<>(Role.values());
+        JTextField name = new JTextField("Name");
+        JTextField email = new JTextField("Email");
+        JButton add = new JButton("Add User");
+        JTextField[] textFields = new JTextField[]{email, name};
+        clearManyTexts(textFields);
+
+        GuiPlacer placer = new GuiPlacer(400, 500);
+        Component[] mainElements = {
+                name, getPadding(10, 5),
+                email, getPadding(10, 5),
+                role, getPadding(10, 5),
+                add, getPadding(10, 5),
+                back
+        };
+        placer.verticalPlacer(mainElements);
+        JPanel container = placer.getContainer();
+
+        panel.add(container);
+        navigator.open(panel, "addUser");
+    }
+
+    private void removeUser(){
+
+        String[] types = new String[]{"Customer", "Employee"};
+        JComboBox<String> type = new JComboBox<>(types);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        JPanel details = new JPanel();
+        JButton delete = new JButton("Delete User");
+        JButton load = new JButton("Load User Data");
+        JTextField id = new JTextField("EmployeeID/ClientID");
+
+        clearTextField(id);
+
+        JLabel name = new JLabel("Name: ");
+        JLabel idLabel = new JLabel("ID: ");
+        JLabel typeLabel = new JLabel("Role/Type: ");
+        JLabel email = new JLabel("Email: ");
+        GuiPlacer smallPlacer = new GuiPlacer(400, 500);
+        JComponent[] smallElements = new JComponent[]{
+                name, idLabel, typeLabel, email
+        };
+        smallPlacer.verticalPlacer(smallElements);
+        details = smallPlacer.getContainer();
+
+        load.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String selection = (String) type.getSelectedItem();
+
+                if (selection == null) {
+                    return;
+                } else if (selection.equals("Customer")) {
+                    typeLabel.setText("Type: ");
+                } else if (selection.equals("Employee")) {
+                    typeLabel.setText("Role: ");
+                }
+            }
+        });
+
+        JComponent[] mainElements = new JComponent[]{
+                details, getPadding(10, 5),
+                id, getPadding(10, 5),
+                type, getPadding(10, 5),
+                load, getPadding(10, 5),
+                delete, getPadding(10, 5),
+                back
+        };
+        GuiPlacer placer = new GuiPlacer(400, 500);
+        placer.verticalPlacer(mainElements);
+        JPanel container = placer.getContainer();
+
+        panel.add(container);
+        navigator.open(panel, "removeUser");
+
+    }
+
+    private void userManagement() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        JButton addUserButton = new JButton("Add User");
+        JButton removeUserButton = new JButton("Remove User");
+        JLabel heading = new JLabel("Accounts Statistics");
+        Label numPendingCustomers = new Label("Pending Customer Accounts: ");
+        Label customerAccounts = new Label("Customer Accounts: ");
+        Label officerAccounts = new Label("Officer Accounts: ");
+        Label adminAccounts = new Label("Admin Accounts: ");
+        JButton back = new JButton("Back");
+
+        addUserButton.addActionListener(e -> addUser());
+        removeUserButton.addActionListener(e -> removeUser());
+        back.addActionListener(e -> navigator.close());
+
+        GuiPlacer placer = new GuiPlacer(400, 500);
+        Component[] mainElements = {
+                heading, getPadding(10, 5),
+                numPendingCustomers, getPadding(10, 5),
+                customerAccounts, getPadding(10, 5),
+                officerAccounts, getPadding(10, 5),
+                adminAccounts, getPadding(10, 5),
+                addUserButton, getPadding(10, 5),
+                removeUserButton, getPadding(10, 5),
+                back
+        };
+        placer.verticalPlacer(mainElements);
+        JPanel container = placer.getContainer();
+
+        panel.add(container);
+        navigator.open(panel, "createAccount");
     }
 
     private String getFDate(Date date) {
