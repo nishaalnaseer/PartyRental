@@ -12,8 +12,8 @@ public class PartyRental {
     private final JFrame mainFrame = new JFrame("Party Rentals");
     private final CardLayout cardLayout = new CardLayout();
     private final Navigator navigator = new Navigator(mainFrame, cardLayout);
-    JButton back = new JButton("Back");
-    JButton logout = new JButton("Logout");
+    private JButton back = new JButton("Back");
+    private JButton logout = new JButton("Logout");
 
     // TODO the following needs to be queried from DB
 //    ArrayList<Item> items = new ArrayList<>();
@@ -78,7 +78,7 @@ public class PartyRental {
         mainFrame.setVisible(true);
     }
 
-    void loginPage() {
+    private void loginPage() {
         JPanel panel = new JPanel(new GridBagLayout());
 
         JLabel label = new JLabel("Sign In");
@@ -101,7 +101,7 @@ public class PartyRental {
         navigator.open(panel, "login");
     }
 
-    void clearTextField(JTextField textField) {
+    private void clearTextField(JTextField textField) {
         textField.addMouseListener(new MouseAdapter() {
             private boolean reset = true;
             @Override
@@ -114,7 +114,7 @@ public class PartyRental {
         });
 
     }
-    void clearPasswordField(JPasswordField passwordField) {
+    private void clearPasswordField(JPasswordField passwordField) {
         passwordField.addMouseListener(new MouseAdapter() {
             private boolean reset = true;
             @Override
@@ -127,18 +127,18 @@ public class PartyRental {
         });
 
     }
-    void clearPasswordTextFields(JTextField textField, JPasswordField passwordField) {
+    private void clearPasswordTextFields(JTextField textField, JPasswordField passwordField) {
         clearTextField(textField);
         clearPasswordField(passwordField);
     }
 
-    void clearManyTexts(JTextField[] textFields) {
+    private void clearManyTexts(JTextField[] textFields) {
         for(int x = 0; x < textFields.length; x++) {
             clearTextField(textFields[x]);
         }
     }
 
-    void customerAccountCreation() {
+    private void customerAccountCreation() {
         JPanel panel = new JPanel(new GridBagLayout());
 
         JLabel label = new JLabel("Account Creation Request");
@@ -161,7 +161,7 @@ public class PartyRental {
         navigator.open(panel, "createAccount");
     }
 
-    JLabel getPadding(int width, int height) {
+    private JLabel getPadding(int width, int height) {
         JLabel padding = new JLabel();
         padding.setPreferredSize(new Dimension(width, height));
         padding.setMinimumSize(new Dimension(width, height));
@@ -169,7 +169,7 @@ public class PartyRental {
         return padding;
     }
 
-    void officerPage() {
+    private void officerPage() {
         JPanel panel = new JPanel(new GridBagLayout());
         JButton makeReservationButton = new JButton("Make Reservation");
         JButton viewReservationButton = new JButton("View Reservations");
@@ -201,7 +201,7 @@ public class PartyRental {
         navigator.open(panel, "createAccount");
     }
 
-    void recordRentOrder() {
+    private void recordRentOrder() {
         // TODO query approved reservations from db
         //  if rentdate = today add a record button to gui
         Item chair = new Item(1, 1, new Date(), "Chair", 50);
@@ -239,7 +239,7 @@ public class PartyRental {
         displayReservation(reservations, "recordRent", "officerRent");
     }
 
-    void approveRegistration() {
+    private void approveRegistration() {
         /*
         function to approve/delete a customers registration request
          */
@@ -331,7 +331,7 @@ public class PartyRental {
         navigator.open(panel, "makeReservation");
     }
 
-    void customerApproveReject(Customer customer) {
+    private void customerApproveReject(Customer customer) {
         JLabel id = new JLabel("id: " + customer.getClientId());
         JLabel name = new JLabel("Name: " + customer.getName());
         JLabel email = new JLabel("Name: " + customer.getEmail());
@@ -376,7 +376,7 @@ public class PartyRental {
         navigator.open(panel, "customerApproveReject");
     }
 
-    void customerPage() {
+    private void customerPage() {
         JPanel panel = new JPanel();
         JButton makeReservationButton = new JButton("Make Reservation");
         JButton viewReservationButton = new JButton("View Reservations");
@@ -398,7 +398,7 @@ public class PartyRental {
         navigator.open(panel, "createAccount");
     }
 
-    void createReservation(HashMap<Item, Integer> itemsForReser) {
+    private void createReservation(HashMap<Item, Integer> itemsForReservation) {
         // TODO this code below needs to be queried form DB
 
         JPanel panel = new JPanel();
@@ -449,14 +449,14 @@ public class PartyRental {
 
                 int prevQty;
                 try {
-                    prevQty = itemsForReser.get(item);
+                    prevQty = itemsForReservation.get(item);
                     prevQty += amount;
                 } catch (NullPointerException ex) {
                     prevQty = amount;
                 }
-                itemsForReser.put(item, prevQty);
+                itemsForReservation.put(item, prevQty);
                 navigator.close();
-                createReservation(itemsForReser);
+                createReservation(itemsForReservation);
             }
         });
 
@@ -467,8 +467,8 @@ public class PartyRental {
         table.add(qtyHeading, gbc);
         gbc.gridy = 1;
 
-        for(Item item : itemsForReser.keySet()) {
-            Integer value = itemsForReser.get(item);
+        for(Item item : itemsForReservation.keySet()) {
+            Integer value = itemsForReservation.get(item);
 
             JLabel name =  new JLabel(item.getDescription());
             JLabel valueHolder =  new JLabel(value.toString());
@@ -481,8 +481,8 @@ public class PartyRental {
             delete.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    itemsForReser.remove(item);
-                    createReservation(itemsForReser);
+                    itemsForReservation.remove(item);
+                    createReservation(itemsForReservation);
                 }
             });
             edit.addActionListener(new ActionListener() {
@@ -495,7 +495,7 @@ public class PartyRental {
                         if (input != null) {
                             try {
                                 newAmount = Integer.parseInt(input);
-                                itemsForReser.put(item, newAmount);
+                                itemsForReservation.put(item, newAmount);
                                 valueHolder.setText(String.valueOf(newAmount));
                                 return;
                             } catch (NumberFormatException ex) {
@@ -576,7 +576,7 @@ public class PartyRental {
 
     }
 
-    void displayReservation(ArrayList<Reservation> reservations, String panelDesc, String userType) {
+    private void displayReservation(ArrayList<Reservation> reservations, String panelDesc, String userType) {
         /*
         function to view all of user's reservations
          */
@@ -655,14 +655,14 @@ public class PartyRental {
         navigator.open(panel, "makeReservation");
     }
 
-    void viewReservations(String userType) {
+    private void viewReservations(String userType) {
         /*
         function to view all of user's reservations
          */
         displayReservation(reservations, "viewReservations", "officer");
     }
 
-    void viewReservation(Reservation reservation, String userType) {
+    private void viewReservation(Reservation reservation, String userType) {
         /*
         function to view a single reservation
          */
@@ -819,7 +819,7 @@ public class PartyRental {
         navigator.open(panel, "viewReservation");
     }
 
-    void recordReturnOrder() {
+    private void recordReturnOrder() {
         // TODO query approved reservations from db
         //  if rentdate = today add a record button to gui
         Item chair = new Item(1, 1, new Date(), "Chair", 50);
@@ -857,7 +857,7 @@ public class PartyRental {
         displayReservation(reservations, "recordReturnOrder", "officerReturn");
     }
 
-    void adminPage() {
+    private void adminPage() {
         JPanel panel = new JPanel(new GridBagLayout());
         JButton management = new JButton("User Management");
         JButton sales = new JButton("Sales Report");
