@@ -866,6 +866,7 @@ public class PartyRental {
         JButton twitterScrape = new JButton("Search Twitter");
 
         management.addActionListener(e -> userManagement());
+        inventory.addActionListener(e -> inventoryManagement());
 
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {
@@ -913,7 +914,6 @@ public class PartyRental {
         JComboBox<String> type = new JComboBox<>(types);
 
         JPanel panel = new JPanel(new GridBagLayout());
-        JPanel details = new JPanel();
         JButton delete = new JButton("Delete User");
         JButton load = new JButton("Load User Data");
         JTextField id = new JTextField("EmployeeID/ClientID");
@@ -929,7 +929,7 @@ public class PartyRental {
                 name, idLabel, typeLabel, email
         };
         smallPlacer.verticalPlacer(smallElements);
-        details = smallPlacer.getContainer();
+        JPanel details = smallPlacer.getContainer();
 
         load.addActionListener(new ActionListener() {
             @Override
@@ -994,6 +994,126 @@ public class PartyRental {
 
         panel.add(container);
         navigator.open(panel, "createAccount");
+    }
+
+    private void inventoryManagement() {
+
+//        JPanel stats;
+
+        JButton add = new JButton("Add Item");
+        JButton remove = new JButton("Remove Item");
+        JButton back = new JButton("Back");
+        back.addActionListener(e -> navigator.close());
+        add.addActionListener(e -> addItem());
+        remove.addActionListener(e -> removeItem());
+
+        GuiPlacer mainPlacer = new GuiPlacer(400, 500);
+        JComponent[] mainElements = new  JComponent[]{
+                add, getPadding(10, 5),
+                remove, getPadding(10, 5),
+                back, getPadding(10, 5),
+        };
+        mainPlacer.verticalPlacer(mainElements);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        JPanel container = mainPlacer.getContainer();
+        panel.add(container);
+
+        navigator.open(panel, "inventoryManagement");
+    }
+
+    private void addItem() {
+        JPanel panel = new JPanel(new GridBagLayout());
+
+        JTextField description = new JTextField("Description");
+        JTextField rate = new JTextField("Rate");
+        JButton add = new JButton("Add");
+        JLabel heading = new JLabel("Add Item");
+        heading.setHorizontalAlignment(SwingConstants.CENTER);
+        JTextField[] fields = new JTextField[]{description, rate};
+        clearManyTexts(fields);
+
+        JComponent[] elements = new JComponent[]{
+                heading, getPadding(10, 5),
+                description, getPadding(10, 5),
+                rate, getPadding(10, 5),
+                add, getPadding(10, 5),
+                back
+        };
+
+        GuiPlacer placer = new GuiPlacer(400,500);
+        placer.verticalPlacer(elements);
+        JPanel container = placer.getContainer();
+
+        panel.add(container);
+        navigator.open(panel, "addItem");
+    }
+
+    private void removeItem() {
+        JPanel panel = new JPanel(new GridBagLayout());
+
+        final GridBagConstraints gbc = new GridBagConstraints();
+        JPanel table = new JPanel(new GridBagLayout());
+        gbc.weightx = 1;
+        gbc.weighty = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+
+        JLabel idHeading = new JLabel("ID");
+        JLabel descriptionHeading = new JLabel("Description");
+        JLabel rateHeading = new JLabel("Rate");
+        JLabel createdByHeading = new JLabel("Created By");
+        JLabel createdOnHeading = new JLabel("Created On");
+
+        table.add(idHeading, gbc);
+        gbc.gridx = 1;
+        table.add(descriptionHeading, gbc);
+        gbc.gridx = 2;
+        table.add(rateHeading, gbc);
+        gbc.gridx = 3;
+        table.add(createdByHeading, gbc);
+        gbc.gridx = 4;
+        table.add(createdOnHeading, gbc);
+
+        ArrayList<Item> items = new ArrayList<>();
+        items.add(new Item(1, 1, new Date(), "Chair", 50));
+        items.add(new Item(1, 1, new Date(), "Chair", 50));
+        items.add(new Item(1, 1, new Date(), "Chair", 50));
+        items.add(new Item(1, 1, new Date(), "Chair", 50));
+
+        for(int x = 0; x < items.size(); x++) {
+            gbc.gridy++;
+
+            Item item = items.get(x);
+            JLabel id = new JLabel(String.valueOf(item.getId()));
+            JLabel description = new JLabel(item.getDescription());
+            JLabel rate = new JLabel(String.valueOf(item.getRate()));
+            JLabel createdBy = new JLabel(String.valueOf(item.getCreatedBy()));
+            JLabel createdOn = new JLabel(getFDate(item.getDate()));
+            JButton delete = new JButton("Delete");
+
+            JComponent[] tableElements = new JComponent[]{
+                    id, description, rate, createdBy, createdOn, delete
+            };
+
+            for(int i = 0; i < tableElements.length; i++) {
+                gbc.gridx = i;
+                JComponent element = tableElements[i];
+                table.add(element, gbc);
+            }
+        }
+
+        JComponent[] elements = new JComponent[]{
+                table, getPadding(10, 5),
+                back
+        };
+
+        GuiPlacer placer = new GuiPlacer(400,500);
+        placer.verticalPlacer(elements);
+        JPanel container = placer.getContainer();
+
+        panel.add(container);
+        navigator.open(panel, "removeItem");
     }
 
     private String getFDate(Date date) {
