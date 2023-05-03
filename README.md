@@ -19,6 +19,7 @@
 ### HeidiSQL Version (GUI Client for MariaDB)
 ```11.3.0.6295```
 
+## Dependencies
 ### MariaDB Connector/J
 ```3.1.4```
-#### Get it from [here](https://mariadb.com/downloads/connectors/connectors-data-access/java8-connector/)
+#### Get Connector/J from [here](https://mariadb.com/downloads/connectors/connectors-data-access/java8-connector/)

@@ -1,21 +1,26 @@
+import java.sql.*;
+
+import org.mariadb.jdbc.Driver;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import org.mariadb.jdbc.Driver;
+import java.util.Date;
 
 public class PartyRental {
 
     private final JFrame mainFrame = new JFrame("Party Rentals");
     private final CardLayout cardLayout = new CardLayout();
     private final Navigator navigator = new Navigator(mainFrame, cardLayout);
-    private JButton back = new JButton("Back");
-    private JButton logout = new JButton("Logout");
+    private final JButton back = new JButton("Back");
+    private final JButton logout = new JButton("Logout");
+    private final SqlScripts scripts = new SqlScripts();
 
     // TODO the following needs to be queried from DB
 //    ArrayList<Item> items = new ArrayList<>();
@@ -94,6 +99,20 @@ public class PartyRental {
         mainFrame.setVisible(true);
     }
 
+    private String sha256(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not supported", e);
+        }
+    }
+
     private void loginPage() {
         JPanel panel = new JPanel(new GridBagLayout());
 
@@ -109,7 +128,13 @@ public class PartyRental {
         clearPasswordTextFields(usernameField, passwordField);
 
         GuiPlacer placer = new GuiPlacer(400, 500);
-        Component[] elements = {label, usernameField, passwordField, loginButton, createAccount};
+        Component[] elements = {
+                label,
+                usernameField,
+                passwordField, getPadding(400, 5),
+                loginButton, getPadding(400, 5),
+                createAccount
+        };
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
 
@@ -154,6 +179,24 @@ public class PartyRental {
         }
     }
 
+    private boolean checkUser(String[] scripts, String username, String password) {
+        for(String script : scripts) {
+            try {
+                // Create a prepared statement object
+                PreparedStatement stmt = connection.prepareStatement(script);
+                stmt.setString(1, username);
+                stmt.setString(2, password);
+                ResultSet rs = stmt.executeQuery();
+                if(!rs.next()) {
+                    return false;
+                }
+            } catch (SQLException ex) {
+                // do nothing
+            }
+        }
+        return true;
+    }
+
     private void customerAccountCreation() {
         JPanel panel = new JPanel(new GridBagLayout());
 
@@ -165,11 +208,73 @@ public class PartyRental {
         JComboBox<CustomerType> type = new JComboBox<>(CustomerType.values());
         JButton submit = new JButton("Send Request");
 
+        submit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String customerName = name.getText();
+                String customerEmail = email.getText();
+                char[] passRaw = passwordField.getPassword();
+                String customerPassword = new String(passRaw);
+                String customerType =  String.valueOf(type.getSelectedItem());
+                String[] texts = new String[]{customerName, customerEmail, customerPassword, customerType};
+
+                if((!customerEmail.contains("@"))
+                        && (!customerEmail.contains("."))){
+                    JOptionPane.showMessageDialog(mainFrame, "Invalid Option");
+                    return;
+                }
+                for (String text : texts) {
+                    if(text.isBlank()) {
+                        JOptionPane.showMessageDialog(mainFrame, "Invalid Option");
+                        return;
+                    }
+                }
+                if (customerName.equals("Name") || customerPassword.equals("Password")) {
+                    JOptionPane.showMessageDialog(mainFrame, "Invalid Option");
+                    return;
+                }
+                try {
+                    customerPassword = sha256(customerPassword);
+                } catch (RuntimeException exception) {
+                    JOptionPane.showMessageDialog(mainFrame, "Invalid Password");
+                    return;
+                }
+
+                String[] checkScripts = new String[]{scripts.getClient, scripts.getEmployee, scripts.getNewClient};
+                if(!checkUser(checkScripts, customerEmail, customerPassword)) {
+                    JOptionPane.showMessageDialog(mainFrame, "Email taken!");
+                    return;
+                }
+
+                String script = scripts.createClient;
+                try {
+                    PreparedStatement preparedStatement = connection.prepareStatement(script);
+                    preparedStatement.setString(1, customerName);
+                    preparedStatement.setString(2, customerPassword);
+                    preparedStatement.setString(3, customerEmail);
+                    preparedStatement.setString(4, customerType);
+                    preparedStatement.executeQuery();
+                    JOptionPane.showMessageDialog(mainFrame, "Your request has been sent and is awaiting approval!");
+                    navigator.close();
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+
         clearPasswordTextFields(name, passwordField);
         clearTextField(email);
 
         GuiPlacer placer = new GuiPlacer(400, 500);
-        Component[] elements = {label, name, email, passwordField, type, submit, back};
+        Component[] elements = {
+                label,
+                name,
+                email,
+                passwordField,
+                type, getPadding(400, 5),
+                submit, getPadding(400, 5),
+                back
+        };
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
 
