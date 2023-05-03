@@ -29,8 +29,8 @@ public class Reservation {
 
         // TODO query the parameters for the following variable from DB
         this.customer = new Customer(
-                "String name", "String password",  1,
-                "DOMESTIC", "daw", "ENABLED");
+                customerId, "String name", "String password",  "DOMESTIC",
+                "a@.com", "ENABLED");
 
     }
 

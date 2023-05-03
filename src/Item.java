@@ -6,13 +6,21 @@ public class Item {
     private final Date date;
     private String description;
     private float rate;
+    private int stock, available, reserved, rented;
 
-    Item(int id, int createdBy, Date date, String description, float rate) {
+    Item(
+            int id, String description, float rate, int createdBy,
+            Date date, int stock, int available, int reserved, int rented
+    ) {
         this.id = id;
         this.createdBy = createdBy;
         this.date = date;
         this.description = description;
         this.rate = rate;
+        this.stock = stock;
+        this.available = available;
+        this.reserved = reserved;
+        this.rented = rented;
     }
 
     int getId() { return id; }
@@ -22,4 +30,45 @@ public class Item {
     float getRate() { return rate; }
     void setRate(float newRate) { rate = newRate; }
     void setDescription(String description) { this.description = description; }
+
+    void addStock(int amount){
+        stock+=amount;
+    }
+    void addAvailable(int amount){
+        available+=amount;
+    }
+    void addReserved(int amount){
+        reserved+=amount;
+    }
+    void addRented(int amount){
+        rented+=amount;
+    }
+    void reduceAvailable(int amount) {
+        if(available - amount < 0) {
+            throw new BelowZeroError("Available can't go below Zero");
+        } else {
+            available+=amount;
+        }
+    }
+    void reduceRented(int amount) {
+        if(rented - amount < 0) {
+            throw new BelowZeroError("Rented can't go below Zero");
+        } else {
+            rented+=amount;
+        }
+    }
+    void reduceReserved(int amount) {
+        if(reserved - amount < 0) {
+            throw new BelowZeroError("Reserved can't go below Zero");
+        } else {
+            reserved+=amount;
+        }
+    }
+    void reduceStock(int amount) {
+        if(stock - amount < 0) {
+            throw new BelowZeroError("Stock can't go below Zero");
+        } else {
+            stock+=amount;
+        }
+    }
 }

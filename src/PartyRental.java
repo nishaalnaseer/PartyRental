@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 
+
 public class PartyRental {
 
     private final JFrame mainFrame = new JFrame("Party Rentals");
@@ -21,6 +22,8 @@ public class PartyRental {
     private final JButton back = new JButton("Back");
     private final JButton logout = new JButton("Logout");
     private final SqlScripts scripts = new SqlScripts();
+    private Employee employee;
+    private Customer customer;
 
     // TODO the following needs to be queried from DB
 //    ArrayList<Item> items = new ArrayList<>();
@@ -51,23 +54,23 @@ public class PartyRental {
         loginPage();
 
         // TODO the following needs to be queried from DB on runtime not on app init
-        Item chair = new Item(1, 1, new Date(), "Chair", 50);
-        Item table = new Item(1, 1, new Date(), "Tabke", 50);
-        Item poopoo = new Item(1, 1, new Date(), "Poopopopo", 50);
-        Item nooo = new Item(1, 1, new Date(), "nooo", 50);
-        Item thisItem = new Item(1, 1, new Date(), "this", 50);
-        items.put(chair.getDescription(), chair);
-        items.put(table.getDescription(), table);
-        items.put(poopoo.getDescription(), poopoo);
-        items.put(nooo.getDescription(), nooo);
-        items.put(thisItem.getDescription(), thisItem);
+//        Item chair = new Item(1, 1, new Date(), "Chair", 50, 0, 0, 0);
+//        Item table = new Item(1, 1, new Date(), "Tabke", 50, 0, 0, 0);
+//        Item poopoo = new Item(1, 1, new Date(), "Poopopopo", 50, 0, 0, 0);
+//        Item nooo = new Item(1, 1, new Date(), "nooo", 50, 0, 0, 0);
+//        Item thisItem = new Item(1, 1, new Date(), "this", 50, 0, 0, 0);
+//        items.put(chair.getDescription(), chair);
+//        items.put(table.getDescription(), table);
+//        items.put(poopoo.getDescription(), poopoo);
+//        items.put(nooo.getDescription(), nooo);
+//        items.put(thisItem.getDescription(), thisItem);
 
         HashMap<Item, Integer> fadas = new HashMap<>();
-        fadas.put(chair, 3);
-        fadas.put(table, 2);
-        fadas.put(poopoo, 4);
-        fadas.put(nooo, 7);
-        fadas.put(thisItem, 2);
+//        fadas.put(chair, 3);
+//        fadas.put(table, 2);
+//        fadas.put(poopoo, 4);
+//        fadas.put(nooo, 7);
+//        fadas.put(thisItem, 2);
 
         reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
         reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
@@ -118,14 +121,79 @@ public class PartyRental {
 
         JLabel label = new JLabel("Sign In");
         label.setHorizontalAlignment(SwingConstants.CENTER);
-        JTextField usernameField = new JTextField("Username");
-        JPasswordField passwordField = new JPasswordField("Password");
+        JTextField usernameField = new JTextField("nishawl.naseer2@outlook.com");
+        JPasswordField passwordField = new JPasswordField("123");
         JButton loginButton = new JButton("Login");
         JButton createAccount = new JButton("Create Account");
 
         createAccount.addActionListener(e -> customerAccountCreation());
-        loginButton.addActionListener(e -> adminPage());
+        loginButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String username = usernameField.getText();
+                String password = new String(passwordField.getPassword());
+
+                String[] texts = new String[]{username, password};
+
+                if(validateCredentials(texts, username, password)) {
+                    return;
+                }
+
+                password = sha256(password);
+                try {
+                    PreparedStatement stm = connection.prepareStatement(scripts.getClient);
+                    stm.setString(1, username);
+                    stm.setString(2, password);
+                    ResultSet rs = stm.executeQuery();
+                    while (rs.next()) {
+                        int id = rs.getInt("id");
+                        String name = rs.getString("name");
+                        String userPassword = rs.getString("password");
+                        String userEmail = rs.getString("email");
+                        String type = rs.getString("role");
+                        String status = rs.getString("status");
+
+                        customer = new Customer(id, name, userPassword, userEmail, type, status);
+                        customerPage();
+                        rs.close();
+                    }
+                } catch (SQLException exception) {
+                    JOptionPane.showMessageDialog(mainFrame, "SQL Error!");
+                    return;
+                }
+                try {
+                    PreparedStatement stm = connection.prepareStatement(scripts.getEmployee);
+                    stm.setString(1, username);
+                    stm.setString(2, password);
+                    ResultSet rs = stm.executeQuery();
+                    while (rs.next()) {
+                        int id = rs.getInt("id");
+                        String name = rs.getString("name");
+                        String userPassword = rs.getString("password");
+                        String userEmail = rs.getString("email");
+                        String role = rs.getString("role");
+                        String status = rs.getString("status");
+
+                        employee = new Employee(id, name, userPassword, userEmail, role, status);
+
+                        if (employee.getRole() == Role.ADMINISTRATOR) {
+                            adminPage();
+                            rs.close();
+                            return;
+                        } else if (employee.getRole() == Role.OFFICER) {
+                            officerPage();
+                            rs.close();
+                            return;
+                        }
+                    }
+                } catch (SQLException exception) {
+                    JOptionPane.showMessageDialog(mainFrame, "SQL Error!");
+                    return;
+                }
+            }
+        });
         clearPasswordTextFields(usernameField, passwordField);
+
 
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {
@@ -179,22 +247,38 @@ public class PartyRental {
         }
     }
 
-    private boolean checkUser(String[] scripts, String username, String password) {
+    private boolean checkUser(String[] scripts, String username) {
         for(String script : scripts) {
             try {
                 // Create a prepared statement object
                 PreparedStatement stmt = connection.prepareStatement(script);
                 stmt.setString(1, username);
-                stmt.setString(2, password);
                 ResultSet rs = stmt.executeQuery();
                 if(!rs.next()) {
+                    rs.close();
                     return false;
+                } else {
+                    rs.close();
                 }
             } catch (SQLException ex) {
                 // do nothing
             }
         }
         return true;
+    }
+
+    private boolean validateCredentials(String[] texts, String username, String password) {
+        for (String text : texts) {
+            if(text.isBlank()) {
+                JOptionPane.showMessageDialog(mainFrame, "Invalid Option");
+                return true;
+            }
+        }
+        if (username.equals("Name") || username.equals("Email") || password.equals("Password")) {
+            JOptionPane.showMessageDialog(mainFrame, "Invalid Option");
+            return true;
+        }
+        return false;
     }
 
     private void customerAccountCreation() {
@@ -223,14 +307,7 @@ public class PartyRental {
                     JOptionPane.showMessageDialog(mainFrame, "Invalid Option");
                     return;
                 }
-                for (String text : texts) {
-                    if(text.isBlank()) {
-                        JOptionPane.showMessageDialog(mainFrame, "Invalid Option");
-                        return;
-                    }
-                }
-                if (customerName.equals("Name") || customerPassword.equals("Password")) {
-                    JOptionPane.showMessageDialog(mainFrame, "Invalid Option");
+                if(validateCredentials(texts, customerName, customerPassword)) {
                     return;
                 }
                 try {
@@ -239,9 +316,9 @@ public class PartyRental {
                     JOptionPane.showMessageDialog(mainFrame, "Invalid Password");
                     return;
                 }
-
-                String[] checkScripts = new String[]{scripts.getClient, scripts.getEmployee, scripts.getNewClient};
-                if(!checkUser(checkScripts, customerEmail, customerPassword)) {
+                String[] checkScripts = new String[]{
+                        scripts.checkClient, scripts.checkEmployee, scripts.checkNewClient};
+                if(!checkUser(checkScripts, customerEmail)) {
                     JOptionPane.showMessageDialog(mainFrame, "Email taken!");
                     return;
                 }
@@ -325,18 +402,18 @@ public class PartyRental {
     private void recordRentOrder() {
         // TODO query approved reservations from db
         //  if rentdate = today add a record button to gui
-        Item chair = new Item(1, 1, new Date(), "Chair", 50);
-        Item table22 = new Item(1, 1, new Date(), "Tabke", 50);
-        Item poopoo = new Item(1, 1, new Date(), "Poopopopo", 50);
-        Item nooo = new Item(1, 1, new Date(), "nooo", 50);
-        Item thisItem = new Item(1, 1, new Date(), "this", 50);
+//        Item chair = new Item(1, 1, new Date(), "Chair", 50, stock, reserved, rented);
+//        Item table22 = new Item(1, 1, new Date(), "Tabke", 50, stock, reserved, rented);
+//        Item poopoo = new Item(1, 1, new Date(), "Poopopopo", 50, stock, reserved, rented);
+//        Item nooo = new Item(1, 1, new Date(), "nooo", 50, stock, reserved, rented);
+//        Item thisItem = new Item(1, 1, new Date(), "this", 50, stock, reserved, rented);
 
         HashMap<Item, Integer> fadas = new HashMap<>();
-        fadas.put(chair, 3);
-        fadas.put(table22, 2);
-        fadas.put(poopoo, 4);
-        fadas.put(nooo, 7);
-        fadas.put(thisItem, 2);
+//        fadas.put(chair, 3);
+//        fadas.put(table22, 2);
+//        fadas.put(poopoo, 4);
+//        fadas.put(nooo, 7);
+//        fadas.put(thisItem, 2);
 
         ArrayList<Reservation> reservations = new ArrayList<>();
         reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
@@ -365,7 +442,8 @@ public class PartyRental {
         function to approve/delete a customers registration request
          */
         // TODO the following needs to be queried from a DB
-        Customer customer1 = new Customer("String name", "String password",  1, "DOMESTIC",
+        Customer customer1 = new Customer( 1,"String name", "String password",
+                "DOMESTIC",
                 "daw", "REQUESTED");
         Customer[] customers = {
                 customer1,
@@ -943,18 +1021,18 @@ public class PartyRental {
     private void recordReturnOrder() {
         // TODO query approved reservations from db
         //  if rentdate = today add a record button to gui
-        Item chair = new Item(1, 1, new Date(), "Chair", 50);
-        Item table22 = new Item(1, 1, new Date(), "Tabke", 50);
-        Item poopoo = new Item(1, 1, new Date(), "Poopopopo", 50);
-        Item nooo = new Item(1, 1, new Date(), "nooo", 50);
-        Item thisItem = new Item(1, 1, new Date(), "this", 50);
+//        Item chair = new Item(1, 1, new Date(), "Chair", 50, stock, reserved, rented);
+//        Item table22 = new Item(1, 1, new Date(), "Tabke", 50, stock, reserved, rented);
+//        Item poopoo = new Item(1, 1, new Date(), "Poopopopo", 50, stock, reserved, rented);
+//        Item nooo = new Item(1, 1, new Date(), "nooo", 50, stock, reserved, rented);
+//        Item thisItem = new Item(1, 1, new Date(), "this", 50, stock, reserved, rented);
 
         HashMap<Item, Integer> fadas = new HashMap<>();
-        fadas.put(chair, 3);
-        fadas.put(table22, 2);
-        fadas.put(poopoo, 4);
-        fadas.put(nooo, 7);
-        fadas.put(thisItem, 2);
+//        fadas.put(chair, 3);
+//        fadas.put(table22, 2);
+//        fadas.put(poopoo, 4);
+//        fadas.put(nooo, 7);
+//        fadas.put(thisItem, 2);
 
         ArrayList<Reservation> reservations = new ArrayList<>();
         reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
@@ -988,6 +1066,7 @@ public class PartyRental {
 
         management.addActionListener(e -> userManagement());
         inventory.addActionListener(e -> inventoryManagement());
+        importData.addActionListener(e -> loadDataFiles());
 
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {
@@ -1170,6 +1249,95 @@ public class PartyRental {
         navigator.open(panel, "addItem");
     }
 
+    private ResultSet queryDb(String script) throws SQLException {
+        Statement stmt = connection.createStatement();
+        return stmt.executeQuery(script);
+    }
+
+    private void dbToHashMap() throws SQLException {
+        ResultSet data = queryDb(scripts.getItems);
+        HashMap<Integer, Item> map = new HashMap<Integer, Item>();
+
+        while (data.next()){
+            int id = data.getInt("id");
+            String description = data.getString("description");
+            float rate = data.getFloat("rate");
+            int createdBy = data.getInt("created_by");
+            // date
+            int stock = data.getInt("stock");
+            int reserved = data.getInt("reserved");
+            int available = data.getInt("available");
+            int rented = data.getInt("rented");
+
+            try {
+                Item item = map.get(id);
+            } catch (NullPointerException exception) {
+                Item item = new Item(
+                        id, description, rate, createdBy, new Date(),
+                        stock, available, reserved, rented
+                );
+                map.put(id, item);
+            }
+        }
+
+        data.close();
+    }
+
+    private void loadDataFiles() {
+        JPanel panel = new JPanel(new GridBagLayout());
+
+        JPanel table = new JPanel(new GridBagLayout());
+        GridBagConstraints tableGbc = new GridBagConstraints();
+        tableGbc.gridx = 0;
+        tableGbc.gridy = 0;
+        tableGbc.weightx = 1;
+        tableGbc.weighty = 1;
+
+        itemTable(table, tableGbc, "Items Before");
+        tableGbc.gridy++;
+        table.add(getPadding(10,40), tableGbc);
+        itemTable(table, tableGbc, "Items After");
+        tableGbc.gridy++;
+        table.add(getPadding(10,40), tableGbc);
+
+        JButton approve = new JButton("Approve Changes");
+        JButton load = new JButton("Load CSV File");
+        JComponent[] elements = new JComponent[]{table, load, approve, back};
+        GuiPlacer mainPlacer = new GuiPlacer(600, 600);
+        mainPlacer.verticalPlacer(elements);
+        JPanel container = mainPlacer.getContainer();
+
+        panel.add(container);
+        navigator.open(panel, "loadDataFiles");
+    }
+
+    private void itemTable(JPanel table, GridBagConstraints tableGbc, String heading) {
+        JLabel details = new JLabel(heading);
+        details.setHorizontalAlignment(SwingConstants.LEFT);
+        JLabel idHeading = new JLabel("ID");
+        JLabel descriptionHeading = new JLabel("Description");
+        JLabel rateHeading = new JLabel("Rate");
+        JLabel createdHeading = new JLabel("Created By");
+        JLabel dateHeading = new JLabel("Created On");
+        JLabel stockHeading = new JLabel("In Stock");
+        JLabel reservedHeading = new JLabel("In Reserve");
+        JLabel rentedHeading = new JLabel("Rented");
+        JComponent[] headings = new JComponent[]{
+                idHeading, descriptionHeading, rateHeading, createdHeading,
+                dateHeading, stockHeading, reservedHeading, rentedHeading
+        };
+
+        tableGbc.gridy++;
+        tableGbc.gridx = 0;
+        table.add(details, tableGbc);
+        tableGbc.gridy++;
+        for(int x = 0; x < headings.length; x++) {
+            tableGbc.gridx = x;
+            JComponent element = headings[x];
+            table.add(element, tableGbc);
+        }
+    }
+
     private void removeItem() {
         JPanel panel = new JPanel(new GridBagLayout());
 
@@ -1197,10 +1365,10 @@ public class PartyRental {
         table.add(createdOnHeading, gbc);
 
         ArrayList<Item> items = new ArrayList<>();
-        items.add(new Item(1, 1, new Date(), "Chair", 50));
-        items.add(new Item(1, 1, new Date(), "Chair", 50));
-        items.add(new Item(1, 1, new Date(), "Chair", 50));
-        items.add(new Item(1, 1, new Date(), "Chair", 50));
+//        items.add(new Item(1, 1, new Date(), "Chair", 50, stock, reserved, rented));
+//        items.add(new Item(1, 1, new Date(), "Chair", 50, stock, reserved, rented));
+//        items.add(new Item(1, 1, new Date(), "Chair", 50, stock, reserved, rented));
+//        items.add(new Item(1, 1, new Date(), "Chair", 50, stock, reserved, rented));
 
         for(int x = 0; x < items.size(); x++) {
             gbc.gridy++;

@@ -1,8 +1,7 @@
 public class Employee extends Person {
     private final int id;
     private final Role role;
-    Employee(String name, String password, int id, String role,
-             String email, String status) {
+    Employee(int id, String name, String password, String email, String role, String status) {
         super(name, password, email, status);
         this.id = id;
         this.role = Role.valueOf(role);
@@ -12,7 +11,7 @@ public class Employee extends Person {
         return id;
     }
 
-    String getRole() {
-        return role.toString();
+    Role getRole() {
+        return role;
     }
 }

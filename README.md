@@ -20,6 +20,11 @@
 ```11.3.0.6295```
 
 ## Dependencies
+
 ### MariaDB Connector/J
 ```3.1.4```
 #### Get Connector/J from [here](https://mariadb.com/downloads/connectors/connectors-data-access/java8-connector/)
+
+### Apache Commons CSV (CSV Parser)
+```1.10.0```
+#### Get Apache Commons CSV from [here](https://dlcdn.apache.org//commons/csv/binaries/)

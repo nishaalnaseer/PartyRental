@@ -10,10 +10,25 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://D:/Misc/dev_prod/mariadb-java-client-3.1.4.jar!/" />
+          <root url="jar://D:/Misc/dev_prod/jars/mariadb-java-client-3.1.4.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://D:/Misc/dev_prod/jars/commons-csv-1.10.0" />
+        </CLASSES>
+        <JAVADOC>
+          <root url="file://D:/Misc/dev_prod/jars/commons-csv-1.10.0/apidocs" />
+        </JAVADOC>
+        <SOURCES>
+          <root url="file://D:/Misc/dev_prod/jars/commons-csv-1.10.0" />
+        </SOURCES>
+        <jarDirectory url="file://D:/Misc/dev_prod/jars/commons-csv-1.10.0" recursive="false" />
+        <jarDirectory url="file://D:/Misc/dev_prod/jars/commons-csv-1.10.0" recursive="false" type="SOURCES" />
       </library>
     </orderEntry>
   </component>
