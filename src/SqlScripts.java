@@ -1,6 +1,6 @@
 public class SqlScripts {
     final String createClient =
-            "INSERT INTO party_rental.requested_customer (name, password, email, type)" +
+            "INSERT INTO requested_customer (name, password, email, type)" +
             "VALUES (?, ?, ?, ?)";
 
     final String checkEmployee =
@@ -21,4 +21,10 @@ public class SqlScripts {
     final String getItems =
             "SELECT * FROM item";
 
+    final String updateItem =
+            "UPDATE item SET rate = ?, stock = ?, available = ? WHERE id = ?";
+
+    final String insertItem =
+            "INSERT INTO item (description, rate, created_by, created_on, " +
+                    "stock, available, reserved, rented) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 }

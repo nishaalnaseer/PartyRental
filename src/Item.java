@@ -30,45 +30,36 @@ public class Item {
     float getRate() { return rate; }
     void setRate(float newRate) { rate = newRate; }
     void setDescription(String description) { this.description = description; }
-
-    void addStock(int amount){
-        stock+=amount;
-    }
-    void addAvailable(int amount){
-        available+=amount;
-    }
-    void addReserved(int amount){
-        reserved+=amount;
-    }
-    void addRented(int amount){
-        rented+=amount;
-    }
-    void reduceAvailable(int amount) {
-        if(available - amount < 0) {
+    void adjustAvailable(int amount) {
+        if(available + amount < 0) {
             throw new BelowZeroError("Available can't go below Zero");
         } else {
             available+=amount;
         }
     }
-    void reduceRented(int amount) {
-        if(rented - amount < 0) {
+    void adjustRented(int amount) {
+        if(rented + amount < 0) {
             throw new BelowZeroError("Rented can't go below Zero");
         } else {
             rented+=amount;
         }
     }
-    void reduceReserved(int amount) {
-        if(reserved - amount < 0) {
+    void adjustReserved(int amount) {
+        if(reserved + amount < 0) {
             throw new BelowZeroError("Reserved can't go below Zero");
         } else {
             reserved+=amount;
         }
     }
-    void reduceStock(int amount) {
-        if(stock - amount < 0) {
+    void adjustStock(int amount) {
+        if(stock + amount < 0) {
             throw new BelowZeroError("Stock can't go below Zero");
         } else {
             stock+=amount;
         }
     }
+    int getStock() {return stock;}
+    int getAvailable() {return available;}
+    int getRented() {return rented;}
+    int getReserved() {return reserved;}
 }

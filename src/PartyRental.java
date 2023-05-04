@@ -1,10 +1,20 @@
+// sql and db
+import java.io.FileNotFoundException;
 import java.sql.*;
-
 import org.mariadb.jdbc.Driver;
 
+// hashing
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
+// csv parser
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.List;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 
 import javax.swing.*;
 import java.awt.*;
@@ -817,9 +827,9 @@ public class PartyRental {
             JLabel id = new JLabel(Integer.toString(reservation.getReservationId()));
             JLabel name = new JLabel(reservation.getCustomer().getName());
             JLabel remarks = new JLabel(reservation.getRemarks());
-            JLabel reservationDate = new JLabel(getFDate(reservation.getReservationDate()));
-            JLabel rentingDate = new JLabel(getFDate(reservation.getRentDate()));
-            JLabel returningDate = new JLabel(getFDate(reservation.getReservationDate()));
+            JLabel reservationDate = new JLabel(getFDate(reservation.getReservationDate(), "dd-MMM-yy"));
+            JLabel rentingDate = new JLabel(getFDate(reservation.getRentDate(), "dd-MMM-yy"));
+            JLabel returningDate = new JLabel(getFDate(reservation.getReservationDate(), "dd-MMM-yy"));
             JButton delete = new JButton("Delete");
             JButton view = new JButton("View");
             JComponent[] elements = {
@@ -872,9 +882,9 @@ public class PartyRental {
         JLabel clientID = new JLabel("Client ID: " + client.getClientId());
         JLabel clientName = new JLabel("Client Name: " + client.getName());
         JLabel remarks = new JLabel("Remarks: " + reservation.getRemarks());
-        JLabel reservationDate = new JLabel("Reservation Date: " + getFDate(reservation.getReservationDate()));
-        JLabel rentDate = new JLabel("Rent Date: " + getFDate(reservation.getRentDate()));
-        JLabel returnDate = new JLabel("Return Date: " + getFDate(reservation.getReturnDate()));
+        JLabel reservationDate = new JLabel("Reservation Date: " + getFDate(reservation.getReservationDate(), "dd-MMM-yy"));
+        JLabel rentDate = new JLabel("Rent Date: " + getFDate(reservation.getRentDate(), "dd-MMM-yy"));
+        JLabel returnDate = new JLabel("Return Date: " + getFDate(reservation.getReturnDate(), "dd-MMM-yy"));
         JLabel status = new JLabel("Status: " + reservation.getStatus());
 
         Component[] elements = {
@@ -1066,7 +1076,13 @@ public class PartyRental {
 
         management.addActionListener(e -> userManagement());
         inventory.addActionListener(e -> inventoryManagement());
-        importData.addActionListener(e -> loadDataFiles());
+        importData.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                boolean[] loadedArray = {false};
+                loadDataFiles("", loadedArray);
+            }
+        });
 
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {
@@ -1249,42 +1265,107 @@ public class PartyRental {
         navigator.open(panel, "addItem");
     }
 
-    private ResultSet queryDb(String script) throws SQLException {
+    private ResultSet noValueQuery(String script) throws SQLException {
+        /*
+        Query only a predetermined statement from db with no values
+         */
         Statement stmt = connection.createStatement();
         return stmt.executeQuery(script);
     }
 
-    private void dbToHashMap() throws SQLException {
-        ResultSet data = queryDb(scripts.getItems);
-        HashMap<Integer, Item> map = new HashMap<Integer, Item>();
+    private ResultSet valuedQuery(String script, Object[] values) throws SQLException {
+        /*
+        Query only a predetermined statement from db with values
+         */
+        PreparedStatement statement = connection.prepareStatement(script);
+        for(int x = 0; x < values.length; x++) {
+            String value = String.valueOf(values[x]);
+            statement.setString(x+1,  value);
+        }
+        return statement.executeQuery();
+    }
+
+    private HashMap<String, Item> dbToHashMap() throws SQLException {
+        ResultSet data = noValueQuery(scripts.getItems);
+        HashMap<String, Item> map = new HashMap<>();
 
         while (data.next()){
             int id = data.getInt("id");
             String description = data.getString("description");
             float rate = data.getFloat("rate");
             int createdBy = data.getInt("created_by");
-            // date
+            Date createdOn = data.getDate("created_on");
+//            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yy");
+//            Date createdOn = new Date();
             int stock = data.getInt("stock");
             int reserved = data.getInt("reserved");
             int available = data.getInt("available");
             int rented = data.getInt("rented");
-
-            try {
-                Item item = map.get(id);
-            } catch (NullPointerException exception) {
-                Item item = new Item(
-                        id, description, rate, createdBy, new Date(),
-                        stock, available, reserved, rented
-                );
-                map.put(id, item);
-            }
+            Item item = new Item(
+                    id, description, rate, createdBy, createdOn,
+                    stock, available, reserved, rented
+            );
+            map.put(description, item);
         }
 
         data.close();
+        return map;
     }
 
-    private void loadDataFiles() {
+    private ArrayList<Object[]> csvToList(String filePath) throws IOException {
+        FileReader fileReader = new FileReader(filePath);
+        CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader();
+        CSVParser csvParser = new CSVParser(fileReader, csvFormat);
+        List<CSVRecord> csvRecords = csvParser.getRecords();
+        ArrayList<Object[]> items = new ArrayList<>();
+
+        for (CSVRecord csvRecord : csvRecords) {
+            String description;
+            float rate;
+            int qty;
+
+            try {
+                description = csvRecord.get("description");
+                String rawRate = csvRecord.get("rate");
+                String rawQty = csvRecord.get("adding_qty");
+                rate = Float.parseFloat(rawRate);
+                qty = Integer.parseInt(rawQty);
+            } catch (IllegalArgumentException exception) {
+                JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+                csvParser.close();
+                fileReader.close();
+                return new ArrayList<>();
+            }
+            Object[] item = new Object[]{description, rate, qty};
+            items.add(item);
+        }
+        csvParser.close();
+        fileReader.close();
+        return items;
+    }
+
+    private void loadDataFiles(String csvFile, boolean[] loadedArray) {
         JPanel panel = new JPanel(new GridBagLayout());
+        HashMap<String, Item> items;
+//        final boolean[] loadedArray = {false};
+        try {
+            items = dbToHashMap();
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+            return;
+        }
+
+        ArrayList<Object[]> itemList;
+        if(!csvFile.equals("")) {
+            try {
+                itemList = csvToList(csvFile);
+            } catch (IOException exception) {
+                itemList = new ArrayList<>();
+                JOptionPane.showMessageDialog(mainFrame, "File Not Found!");
+            }
+        } else {
+            itemList = new ArrayList<>();
+        }
 
         JPanel table = new JPanel(new GridBagLayout());
         GridBagConstraints tableGbc = new GridBagConstraints();
@@ -1293,48 +1374,178 @@ public class PartyRental {
         tableGbc.weightx = 1;
         tableGbc.weighty = 1;
 
-        itemTable(table, tableGbc, "Items Before");
+        itemTable(table, tableGbc, "Items Before", items, true);
         tableGbc.gridy++;
         table.add(getPadding(10,40), tableGbc);
-        itemTable(table, tableGbc, "Items After");
+
+        HashMap<String, Item> itemsBackup = new HashMap<>(items); // create backup in case of BelowZeroError
+        for (Object[] row : itemList) {
+            String description = (String) row[0];
+            float newRate = (float) row[1];
+            int qty = (int) row[2];
+
+            try {
+                Item item = items.get(description);
+                item.adjustStock(qty);
+                item.adjustAvailable(qty);
+            } catch (NullPointerException exception) {
+                Item item = new Item(
+                        -1, description, newRate, employee.getId(), new Date(),
+                        qty, qty, 0, 0
+                        );
+                items.put(description, item);
+            } catch (BelowZeroError exception) {
+                JOptionPane.showMessageDialog(mainFrame, exception);
+                items = itemsBackup;
+                break;
+            }
+        }
+
+        itemTable(table, tableGbc, "Items After Approval", items, loadedArray[0]);
         tableGbc.gridy++;
         table.add(getPadding(10,40), tableGbc);
 
         JButton approve = new JButton("Approve Changes");
         JButton load = new JButton("Load CSV File");
-        JComponent[] elements = new JComponent[]{table, load, approve, back};
-        GuiPlacer mainPlacer = new GuiPlacer(600, 600);
+        JScrollPane scroll = scrollTable(table, 720, 450);
+
+        JComponent[] elements = new JComponent[]{
+                scroll,  getPadding(10, 5),
+                load, getPadding(10, 5),
+                approve,  getPadding(10, 5),
+                back
+        };
+        GuiPlacer mainPlacer = new GuiPlacer(750, 600);
         mainPlacer.verticalPlacer(elements);
         JPanel container = mainPlacer.getContainer();
+
+        load.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFrame frame = new JFrame("Select CSV File");
+
+                JFileChooser fileChooser = new JFileChooser();
+                int result = fileChooser.showOpenDialog(frame);
+
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
+                    loadedArray[0] = true;
+                    navigator.close();
+                    loadDataFiles(selectedFile, loadedArray);
+                };
+            }
+        });
+        final HashMap<String, Item> toDB = items;
+        approve.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                for(Item item : toDB.values()) {
+                    if(item.getId() == -1) {
+                        Object[] values = new Object[]{
+                            item.getDescription(), item.getRate(), item.getCreatedBy(),
+                            getFDate(item.getDate(), "mm-dd-yy"), item.getStock(), item.getAvailable(),
+                            item.getReserved(), item.getRented()
+                        };
+                        try {
+                            ResultSet rs = valuedQuery(scripts.insertItem, values);
+                            rs.close();
+                        } catch (SQLException ex) {
+                            JOptionPane.showMessageDialog(mainFrame, "SQL Error");
+                        }
+                    } else {
+                        Object[] values = new Object[]{
+                                item.getRate(), item.getStock(), item.getAvailable(),
+                                item.getId()
+//                              "UPDATE item SET rate = ?, stock = ?, available = ? WHERE id = ?";
+                        };
+                        try {
+                            ResultSet rs = valuedQuery(scripts.updateItem, values);
+                            rs.close();
+                        } catch (SQLException ex) {
+                            JOptionPane.showMessageDialog(mainFrame, "SQL Error");
+                        }
+                    }
+                }
+                navigator.close();
+                boolean[] loadedArray = {false};
+                loadDataFiles("", loadedArray);
+            }
+        });
 
         panel.add(container);
         navigator.open(panel, "loadDataFiles");
     }
 
-    private void itemTable(JPanel table, GridBagConstraints tableGbc, String heading) {
+    private JScrollPane scrollTable(JPanel table, int width, int height) {
+        JScrollPane scrollPane = new JScrollPane(table);
+        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
+        scrollBar.setUnitIncrement(scrollBar.getUnitIncrement() * 8);
+        scrollPane.setPreferredSize(new Dimension(width, height));
+        scrollPane.setMinimumSize(new Dimension(width, height));
+        scrollPane.setViewportView(table);
+
+        return scrollPane;
+    }
+
+    private void itemTable(JPanel table, GridBagConstraints tableGbc, String heading,
+            HashMap<String, Item> items, boolean loaded
+            ) {
+
+        tableGbc.gridy++;
+        tableGbc.gridx=1;
         JLabel details = new JLabel(heading);
-        details.setHorizontalAlignment(SwingConstants.LEFT);
+        table.add(details, tableGbc);
+
         JLabel idHeading = new JLabel("ID");
         JLabel descriptionHeading = new JLabel("Description");
         JLabel rateHeading = new JLabel("Rate");
         JLabel createdHeading = new JLabel("Created By");
         JLabel dateHeading = new JLabel("Created On");
         JLabel stockHeading = new JLabel("In Stock");
-        JLabel reservedHeading = new JLabel("In Reserve");
+        JLabel availableHeading = new JLabel("Available");
         JLabel rentedHeading = new JLabel("Rented");
         JComponent[] headings = new JComponent[]{
                 idHeading, descriptionHeading, rateHeading, createdHeading,
-                dateHeading, stockHeading, reservedHeading, rentedHeading
+                dateHeading, stockHeading, availableHeading
         };
-
-        tableGbc.gridy++;
-        tableGbc.gridx = 0;
-        table.add(details, tableGbc);
         tableGbc.gridy++;
         for(int x = 0; x < headings.length; x++) {
             tableGbc.gridx = x;
             JComponent element = headings[x];
             table.add(element, tableGbc);
+        }
+
+        if (!loaded) {
+            return;
+        }
+        for(Item item : items.values()) {
+            tableGbc.gridy++;
+            String idString;
+            int idInt = item.getId();
+            if(idInt == -1) {
+                idString = "NEW";
+            } else {
+                idString = Integer.toString(idInt);
+            }
+            JLabel id = new JLabel(idString);
+            JLabel description = new JLabel(item.getDescription());
+            JLabel rate = new JLabel(String.valueOf(item.getRate()));
+            JLabel createdBy = new JLabel(String.valueOf(item.getCreatedBy()));
+            JLabel createdOn = new JLabel(getFDate(item.getDate(), "dd-MMM-yy"));
+            JLabel stock = new JLabel(String.valueOf(item.getStock()));
+            JLabel available = new JLabel(String.valueOf(item.getAvailable()));
+            JLabel rented = new JLabel(String.valueOf(item.getRented()));
+            JLabel reserved = new JLabel(String.valueOf(item.getReserved()));
+
+            JComponent[] elements = new JComponent[]{
+                    id, description, rate, createdBy, createdOn, stock,
+                    available
+            };
+            for(int x = 0; x < elements.length; x++) {
+                tableGbc.gridx = x;
+                JComponent element = elements[x];
+                table.add(element, tableGbc);
+            }
         }
     }
 
@@ -1378,7 +1589,7 @@ public class PartyRental {
             JLabel description = new JLabel(item.getDescription());
             JLabel rate = new JLabel(String.valueOf(item.getRate()));
             JLabel createdBy = new JLabel(String.valueOf(item.getCreatedBy()));
-            JLabel createdOn = new JLabel(getFDate(item.getDate()));
+            JLabel createdOn = new JLabel(getFDate(item.getDate(), "dd-MMM-yy"));
             JButton delete = new JButton("Delete");
 
             JComponent[] tableElements = new JComponent[]{
@@ -1405,9 +1616,9 @@ public class PartyRental {
         navigator.open(panel, "removeItem");
     }
 
-    private String getFDate(Date date) {
+    private String getFDate(Date date, String format) {
         /// get formatted date into a string
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yy");
+        SimpleDateFormat formatter = new SimpleDateFormat(format);
         return formatter.format(date);
     }
 
