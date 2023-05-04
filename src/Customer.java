@@ -2,8 +2,8 @@ public class Customer extends Person {
     private final int clientId;
     private final CustomerType type;
 
-    Customer(int id, String name, String password, String type,
-             String email, String status) {
+    Customer(int id, String name, String password, String email,
+             String type, String status) {
         super(name, password, email, status);
         this.clientId = id;
         this.type = CustomerType.valueOf(type);

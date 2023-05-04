@@ -1,5 +1,4 @@
 // sql and db
-import java.io.FileNotFoundException;
 import java.sql.*;
 import org.mariadb.jdbc.Driver;
 
@@ -95,18 +94,8 @@ public class PartyRental {
         reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
         reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
 
-        back.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                navigator.close();
-            }
-        });
-        logout.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                navigator.close();
-            }
-        });
+        back.addActionListener(e -> navigator.close());
+        logout.addActionListener(e -> navigator.close());
 
 
         mainFrame.setVisible(true);
@@ -137,69 +126,62 @@ public class PartyRental {
         JButton createAccount = new JButton("Create Account");
 
         createAccount.addActionListener(e -> customerAccountCreation());
-        loginButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String username = usernameField.getText();
-                String password = new String(passwordField.getPassword());
+        loginButton.addActionListener(e -> {
+            String username = usernameField.getText();
+            String password = new String(passwordField.getPassword());
 
-                String[] texts = new String[]{username, password};
+            String[] texts = new String[]{username, password};
 
-                if(validateCredentials(texts, username, password)) {
-                    return;
+            if(validateCredentials(texts, username, password)) {
+                return;
+            }
+
+            password = sha256(password);
+            try {
+                Object[] values = new Object[]{username, password, "ENABLED"};
+                ResultSet rs = valuedQuery(scripts.loginClient, values);
+                while (rs.next()) {
+                    int id = rs.getInt("id");
+                    String name = rs.getString("name");
+                    String userPassword = rs.getString("password");
+                    String userEmail = rs.getString("email");
+                    String type = rs.getString("label");
+                    String status = rs.getString("status");
+
+                    customer = new Customer(id, name, userPassword, userEmail, type, status);
+                    customerPage();
+                    rs.close();
                 }
+            } catch (SQLException exception) {
+                JOptionPane.showMessageDialog(mainFrame, "SQL Error!");
+                return;
+            }
+            try {
+                Object[] values = new Object[]{username, password, "ENABLED"};
+                ResultSet rs = valuedQuery(scripts.loginEmployee, values);
+                while (rs.next()) {
+                    int id = rs.getInt("id");
+                    String name = rs.getString("name");
+                    String userPassword = rs.getString("password");
+                    String userEmail = rs.getString("email");
+                    String role = rs.getString("role");
+                    String status = rs.getString("status");
 
-                password = sha256(password);
-                try {
-                    PreparedStatement stm = connection.prepareStatement(scripts.getClient);
-                    stm.setString(1, username);
-                    stm.setString(2, password);
-                    ResultSet rs = stm.executeQuery();
-                    while (rs.next()) {
-                        int id = rs.getInt("id");
-                        String name = rs.getString("name");
-                        String userPassword = rs.getString("password");
-                        String userEmail = rs.getString("email");
-                        String type = rs.getString("role");
-                        String status = rs.getString("status");
+                    employee = new Employee(id, name, userPassword, userEmail, role, status);
 
-                        customer = new Customer(id, name, userPassword, userEmail, type, status);
-                        customerPage();
+                    if (employee.getRole() == Role.ADMINISTRATOR) {
+                        adminPage();
                         rs.close();
+                        return;
+                    } else if (employee.getRole() == Role.OFFICER) {
+                        officerPage();
+                        rs.close();
+                        return;
                     }
-                } catch (SQLException exception) {
-                    JOptionPane.showMessageDialog(mainFrame, "SQL Error!");
-                    return;
                 }
-                try {
-                    PreparedStatement stm = connection.prepareStatement(scripts.getEmployee);
-                    stm.setString(1, username);
-                    stm.setString(2, password);
-                    ResultSet rs = stm.executeQuery();
-                    while (rs.next()) {
-                        int id = rs.getInt("id");
-                        String name = rs.getString("name");
-                        String userPassword = rs.getString("password");
-                        String userEmail = rs.getString("email");
-                        String role = rs.getString("role");
-                        String status = rs.getString("status");
-
-                        employee = new Employee(id, name, userPassword, userEmail, role, status);
-
-                        if (employee.getRole() == Role.ADMINISTRATOR) {
-                            adminPage();
-                            rs.close();
-                            return;
-                        } else if (employee.getRole() == Role.OFFICER) {
-                            officerPage();
-                            rs.close();
-                            return;
-                        }
-                    }
-                } catch (SQLException exception) {
-                    JOptionPane.showMessageDialog(mainFrame, "SQL Error!");
-                    return;
-                }
+            } catch (SQLException exception) {
+                JOptionPane.showMessageDialog(mainFrame, "SQL Error!");
+                return;
             }
         });
         clearPasswordTextFields(usernameField, passwordField);
@@ -266,9 +248,9 @@ public class PartyRental {
                 ResultSet rs = stmt.executeQuery();
                 if(!rs.next()) {
                     rs.close();
-                    return false;
                 } else {
                     rs.close();
+                    return false;
                 }
             } catch (SQLException ex) {
                 // do nothing
@@ -302,50 +284,47 @@ public class PartyRental {
         JComboBox<CustomerType> type = new JComboBox<>(CustomerType.values());
         JButton submit = new JButton("Send Request");
 
-        submit.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String customerName = name.getText();
-                String customerEmail = email.getText();
-                char[] passRaw = passwordField.getPassword();
-                String customerPassword = new String(passRaw);
-                String customerType =  String.valueOf(type.getSelectedItem());
-                String[] texts = new String[]{customerName, customerEmail, customerPassword, customerType};
+        submit.addActionListener(e -> {
+            String customerName = name.getText();
+            String customerEmail = email.getText();
+            char[] passRaw = passwordField.getPassword();
+            String customerPassword = new String(passRaw);
+            String customerType =  String.valueOf(type.getSelectedItem());
+            String[] texts = new String[]{customerName, customerEmail, customerPassword, customerType};
 
-                if((!customerEmail.contains("@"))
-                        && (!customerEmail.contains("."))){
-                    JOptionPane.showMessageDialog(mainFrame, "Invalid Option");
-                    return;
-                }
-                if(validateCredentials(texts, customerName, customerPassword)) {
-                    return;
-                }
-                try {
-                    customerPassword = sha256(customerPassword);
-                } catch (RuntimeException exception) {
-                    JOptionPane.showMessageDialog(mainFrame, "Invalid Password");
-                    return;
-                }
-                String[] checkScripts = new String[]{
-                        scripts.checkClient, scripts.checkEmployee, scripts.checkNewClient};
-                if(!checkUser(checkScripts, customerEmail)) {
-                    JOptionPane.showMessageDialog(mainFrame, "Email taken!");
-                    return;
-                }
+            if((!customerEmail.contains("@"))
+                    && (!customerEmail.contains("."))){
+                JOptionPane.showMessageDialog(mainFrame, "Invalid Option");
+                return;
+            }
+            if(validateCredentials(texts, customerName, customerPassword)) {
+                return;
+            }
+            try {
+                customerPassword = sha256(customerPassword);
+            } catch (RuntimeException exception) {
+                JOptionPane.showMessageDialog(mainFrame, "Invalid Password");
+                return;
+            }
+            String[] checkScripts = new String[]{
+                    scripts.checkClient, scripts.checkEmployee, scripts.checkNewClient};
+            if(!checkUser(checkScripts, customerEmail)) {
+                JOptionPane.showMessageDialog(mainFrame, "Email taken!");
+                return;
+            }
 
-                String script = scripts.createClient;
-                try {
-                    PreparedStatement preparedStatement = connection.prepareStatement(script);
-                    preparedStatement.setString(1, customerName);
-                    preparedStatement.setString(2, customerPassword);
-                    preparedStatement.setString(3, customerEmail);
-                    preparedStatement.setString(4, customerType);
-                    preparedStatement.executeQuery();
-                    JOptionPane.showMessageDialog(mainFrame, "Your request has been sent and is awaiting approval!");
-                    navigator.close();
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
+            String script = scripts.createClient;
+            try {
+                PreparedStatement preparedStatement = connection.prepareStatement(script);
+                preparedStatement.setString(1, customerName);
+                preparedStatement.setString(2, customerPassword);
+                preparedStatement.setString(3, customerEmail);
+                preparedStatement.setString(4, customerType);
+                preparedStatement.executeQuery();
+                JOptionPane.showMessageDialog(mainFrame, "Your request has been sent and is awaiting approval!");
+                navigator.close();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
             }
         });
 
@@ -452,9 +431,8 @@ public class PartyRental {
         function to approve/delete a customers registration request
          */
         // TODO the following needs to be queried from a DB
-        Customer customer1 = new Customer( 1,"String name", "String password",
-                "DOMESTIC",
-                "daw", "REQUESTED");
+        Customer customer1 = new Customer(1, "String name", "String password", "String email",
+                "DOMESTIC", "ENABLED");
         Customer[] customers = {
                 customer1,
                 customer1,
@@ -514,12 +492,7 @@ public class PartyRental {
             JComponent[] elements = {
                     id, name, type, email, status, view
             };
-            view.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    customerApproveReject(customer);
-                }
-            });
+            view.addActionListener(e -> customerApproveReject(customer));
 
             for(int x = 0; x < elements.length; x++) {
                 gbc.gridx = x;
@@ -554,25 +527,14 @@ public class PartyRental {
                 approve, getPadding(40, 5), reject, getPadding(40, 5),
                 back
         };
-        back.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                navigator.close();
-            }
+        back.addActionListener(e -> navigator.close());
+        approve.addActionListener(e -> {
+            // TODO query db accordingly
+            navigator.close();
         });
-        approve.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // TODO query db accordingly
-                navigator.close();
-            }
-        });
-        reject.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // TODO query db accordingly
-                navigator.close();
-            }
+        reject.addActionListener(e -> {
+            // TODO query db accordingly
+            navigator.close();
         });
 
         GuiPlacer placer = new GuiPlacer(400, 600);
@@ -640,33 +602,30 @@ public class PartyRental {
         itemAdder.add(itemDropDown);
         itemAdder.add(qty);
         itemAdder.add(add);
-        add.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String itemDesc = (String) itemDropDown.getSelectedItem();
-                if(itemDesc == null) {
-                    return;
-                }
-                Item item = items.get(itemDesc);
-
-                int amount;
-                try {
-                    amount = Integer.parseInt(qty.getText());
-                } catch (NumberFormatException ex) {
-                    return;
-                }
-
-                int prevQty;
-                try {
-                    prevQty = itemsForReservation.get(item);
-                    prevQty += amount;
-                } catch (NullPointerException ex) {
-                    prevQty = amount;
-                }
-                itemsForReservation.put(item, prevQty);
-                navigator.close();
-                createReservation(itemsForReservation);
+        add.addActionListener(e -> {
+            String itemDesc = (String) itemDropDown.getSelectedItem();
+            if(itemDesc == null) {
+                return;
             }
+            Item item = items.get(itemDesc);
+
+            int amount;
+            try {
+                amount = Integer.parseInt(qty.getText());
+            } catch (NumberFormatException ex) {
+                return;
+            }
+
+            int prevQty;
+            try {
+                prevQty = itemsForReservation.get(item);
+                prevQty += amount;
+            } catch (NullPointerException ex) {
+                prevQty = amount;
+            }
+            itemsForReservation.put(item, prevQty);
+            navigator.close();
+            createReservation(itemsForReservation);
         });
 
         gbc.gridy = 0;
@@ -687,12 +646,9 @@ public class PartyRental {
             JButton edit = new JButton("Edit");
             JButton delete = new JButton("Delete");
 
-            delete.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    itemsForReservation.remove(item);
-                    createReservation(itemsForReservation);
-                }
+            delete.addActionListener(e -> {
+                itemsForReservation.remove(item);
+                createReservation(itemsForReservation);
             });
             edit.addActionListener(new ActionListener() {
                 String text = "New Amount: ";
@@ -868,7 +824,7 @@ public class PartyRental {
         /*
         function to view all of user's reservations
          */
-        displayReservation(reservations, "viewReservations", "officer");
+        displayReservation(reservations, "viewReservations", userType);
     }
 
     private void viewReservation(Reservation reservation, String userType) {
@@ -969,58 +925,57 @@ public class PartyRental {
         JPanel container2 = placer2.getContainer();
 
         JButton delete = new JButton("Delete");
-        delete.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // todo delete item from DB
-                navigator.close();
-                navigator.close();
-                viewReservations(userType);
-            }
+        delete.addActionListener(e -> {
+            // todo delete item from DB
+            navigator.close();
+            navigator.close();
+            viewReservations(userType);
         });
 
         GuiPlacer main = new GuiPlacer(400, 500);
         Component[] mainElements;
-        if (userType.equals("customer")) {
-            mainElements = new Component[]{
+        switch (userType) {
+            case "customer" -> mainElements = new Component[]{
                     container, getPadding(5, 5),
                     scrollPane, getPadding(5, 5),
                     container2, getPadding(5, 5),
                     delete, getPadding(5, 5),
                     back, getPadding(5, 5)
             };
-        } else if (userType.equals("officerRent")){
-            JButton rentOrder = new JButton("Record Rent Order");
-            mainElements = new Component[]{
-                    container, getPadding(5, 5),
-                    scrollPane, getPadding(5, 5),
-                    container2, getPadding(5, 5),
-                    rentOrder, getPadding(5, 5),
-                    delete, getPadding(5, 5),
-                    back, getPadding(5, 5),
-            };
-        } else if (userType.equals("officer")) {
-            JButton approve = new JButton("Approve");
-            mainElements = new Component[]{
-                    container, getPadding(5, 5),
-                    scrollPane, getPadding(5, 5),
-                    container2, getPadding(5, 5),
-                    approve, getPadding(5, 5),
-                    delete, getPadding(5, 5),
-                    back, getPadding(5, 5),
-            };
-        } else if(userType.equals("officerReturn")) {
-            JButton recordReturn = new JButton("Record Return Order");
-            mainElements = new Component[]{
-                    container, getPadding(5, 5),
-                    scrollPane, getPadding(5, 5),
-                    container2, getPadding(5, 5),
-                    recordReturn, getPadding(5, 5),
-                    delete, getPadding(5, 5),
-                    back, getPadding(5, 5),
-            };
-        } else {
-            mainElements = new Component[]{};
+            case "officerRent" -> {
+                JButton rentOrder = new JButton("Record Rent Order");
+                mainElements = new Component[]{
+                        container, getPadding(5, 5),
+                        scrollPane, getPadding(5, 5),
+                        container2, getPadding(5, 5),
+                        rentOrder, getPadding(5, 5),
+                        delete, getPadding(5, 5),
+                        back, getPadding(5, 5),
+                };
+            }
+            case "officer" -> {
+                JButton approve = new JButton("Approve");
+                mainElements = new Component[]{
+                        container, getPadding(5, 5),
+                        scrollPane, getPadding(5, 5),
+                        container2, getPadding(5, 5),
+                        approve, getPadding(5, 5),
+                        delete, getPadding(5, 5),
+                        back, getPadding(5, 5),
+                };
+            }
+            case "officerReturn" -> {
+                JButton recordReturn = new JButton("Record Return Order");
+                mainElements = new Component[]{
+                        container, getPadding(5, 5),
+                        scrollPane, getPadding(5, 5),
+                        container2, getPadding(5, 5),
+                        recordReturn, getPadding(5, 5),
+                        delete, getPadding(5, 5),
+                        back, getPadding(5, 5),
+                };
+            }
+            default -> mainElements = new Component[]{};
         }
 
         main.verticalPlacer(mainElements);
@@ -1076,12 +1031,9 @@ public class PartyRental {
 
         management.addActionListener(e -> userManagement());
         inventory.addActionListener(e -> inventoryManagement());
-        importData.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                boolean[] loadedArray = {false};
-                loadDataFiles("", loadedArray);
-            }
+        importData.addActionListener(e -> {
+            boolean[] loadedArray = {false};
+            loadDataFiles("", loadedArray);
         });
 
         GuiPlacer placer = new GuiPlacer(400, 500);
@@ -1100,17 +1052,58 @@ public class PartyRental {
         navigator.open(panel, "createAccount");
     }
 
-    private void addUser(){
+    private void addUser() {
         JPanel panel = new JPanel(new GridBagLayout());
         JComboBox<Role> role = new JComboBox<>(Role.values());
+        JPanel heading = new JPanel();
+        heading.add(new JLabel("Add Employee"));
         JTextField name = new JTextField("Name");
         JTextField email = new JTextField("Email");
-        JButton add = new JButton("Add User");
+        JButton add = new JButton("Add Employee");
         JTextField[] textFields = new JTextField[]{email, name};
         clearManyTexts(textFields);
+        JButton back = new JButton("Back");
+        back.addActionListener(e -> {
+            navigator.close();
+            navigator.close();
+            userManagement();
+        });
+
+        add.addActionListener(e -> {
+            String employeeEmail = email.getText();
+            String employeeName = name.getText();
+            if(!(employeeEmail.contains("@") || employeeEmail.contains("."))) {
+                JOptionPane.showMessageDialog(mainFrame, "Invalid Email");
+                return;
+            }
+            if (employeeName.equals("Name")) {
+                JOptionPane.showMessageDialog(mainFrame, "Invalid Name");
+                return;
+            }
+            Object[] values = new Object[]{employeeEmail};
+            if(!getEntries(scripts.getAllEmployees, values).equals("0")) {
+                JOptionPane.showMessageDialog(mainFrame, "Email Already Taken");
+                return;
+            }
+
+            String password = sha256("123");
+            String employeeRole = String.valueOf(role.getSelectedItem());
+            values = new Object[] {
+                    employeeName, password, employeeEmail, employeeRole, "ENABLED"
+            };
+            try {
+                valuedQuery(scripts.addEmployee, values);
+                JOptionPane.showMessageDialog(mainFrame, "Success!");
+                navigator.close();
+                addUser();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(mainFrame, "SQL Error");
+            }
+        });
 
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] mainElements = {
+                heading, getPadding(10, 5),
                 name, getPadding(10, 5),
                 email, getPadding(10, 5),
                 role, getPadding(10, 5),
@@ -1147,18 +1140,14 @@ public class PartyRental {
         smallPlacer.verticalPlacer(smallElements);
         JPanel details = smallPlacer.getContainer();
 
-        load.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String selection = (String) type.getSelectedItem();
-
-                if (selection == null) {
-                    return;
-                } else if (selection.equals("Customer")) {
-                    typeLabel.setText("Type: ");
-                } else if (selection.equals("Employee")) {
-                    typeLabel.setText("Role: ");
-                }
+        load.addActionListener(e -> {
+            String selection = (String) type.getSelectedItem();
+            if (selection == null) {
+                return;
+            } else if (selection.equals("Customer")) {
+                typeLabel.setText("Type: ");
+            } else if (selection.equals("Employee")) {
+                typeLabel.setText("Role: ");
             }
         });
 
@@ -1179,15 +1168,90 @@ public class PartyRental {
 
     }
 
+    private void displayUsers(String script, JPanel table, GridBagConstraints gbc) {
+        ResultSet resultSet;
+        try {
+            resultSet = noValueQuery(script);
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+            return;
+        }
+        String unique;
+        if(script.equals(scripts.getAllEmployees)) {
+            unique = "role";
+        } else {
+            unique = "label";
+        }
+
+        try {
+            while(resultSet.next()) {
+                JLabel id = new JLabel(String.valueOf(resultSet.getInt("id")));
+                JLabel name = new JLabel(resultSet.getString("name"));
+                JLabel email = new JLabel(resultSet.getString("email"));
+                JLabel roleType = new JLabel(resultSet.getString(unique));
+                JLabel status = new JLabel(resultSet.getString("status"));
+                JButton setStatus = new JButton("Set Status");
+                JComponent[] elements = new JComponent[]{id, name, email, roleType, status};
+                for(int x = 0; x < elements.length; x++) {
+                    JComponent element = elements[x];
+                    gbc.gridx = x;
+                    table.add(element, gbc);
+                }
+            }
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+        }
+
+        try {
+            resultSet.close();
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+            return;
+        }
+    }
+
+    private String getEntries(String script, Object[] values) {
+        try {
+            ResultSet rs = valuedQuery(script, values);
+            int rowCount = 0;
+            if (rs.last()) {
+                rowCount = rs.getRow();
+                rs.beforeFirst(); // move the cursor back to the beginning
+            }
+            return String.valueOf(rowCount);
+        } catch (SQLException exception) {
+            return exception.getMessage();
+        }
+    }
+
     private void userManagement() {
+        Object[] values = {"REQUESTED"};
+        String pending = getEntries(scripts.getPendingClients, values);
+        values = new Object[]{"ENABLED"};
+        String currentClients = getEntries(scripts.getCurrentClients, values);
+        values = new Object[]{"OFFICER", "ENABLED"};
+        String currentOfficers = getEntries(scripts.getCurrentEmployees, values);
+        values = new Object[]{"ADMINISTRATOR", "ENABLED"};
+        String currentAdmins = getEntries(scripts.getCurrentEmployees, values);
+
+        values = new Object[]{"DISABLED"};
+        String disabledClients = getEntries(scripts.getCurrentClients, values);
+        values = new Object[]{"OFFICER", "DISABLED"};
+        String disabledOfficers = getEntries(scripts.getCurrentEmployees, values);
+        values = new Object[]{"ADMINISTRATOR", "DISABLED"};
+        String disabledAdmins = getEntries(scripts.getCurrentEmployees, values);
+
         JPanel panel = new JPanel(new GridBagLayout());
         JButton addUserButton = new JButton("Add User");
         JButton removeUserButton = new JButton("Remove User");
         JLabel heading = new JLabel("Accounts Statistics");
-        Label numPendingCustomers = new Label("Pending Customer Accounts: ");
-        Label customerAccounts = new Label("Customer Accounts: ");
-        Label officerAccounts = new Label("Officer Accounts: ");
-        Label adminAccounts = new Label("Admin Accounts: ");
+        Label numPendingCustomers = new Label("Pending Customer Accounts: " + pending);
+        Label enabledCustomerAccounts = new Label("Enabled Customer Accounts: " + currentClients);
+        Label disabledCustomerAccounts = new Label("Disabled Customer Accounts: " + disabledClients);
+        Label enabledOfficerAccounts = new Label("Enabled Officer Accounts: " + currentOfficers);
+        Label disabledOfficerAccounts = new Label("Disabled Officer Accounts: " + disabledOfficers);
+        Label enabledAdminAccounts = new Label("Enabled Admin Accounts: " + currentAdmins);
+        Label disabledAdminAccounts = new Label("Disabled Admin Accounts: " + disabledAdmins);
         JButton back = new JButton("Back");
 
         addUserButton.addActionListener(e -> addUser());
@@ -1198,9 +1262,12 @@ public class PartyRental {
         Component[] mainElements = {
                 heading, getPadding(10, 5),
                 numPendingCustomers, getPadding(10, 5),
-                customerAccounts, getPadding(10, 5),
-                officerAccounts, getPadding(10, 5),
-                adminAccounts, getPadding(10, 5),
+                enabledCustomerAccounts, getPadding(10, 5),
+                disabledCustomerAccounts, getPadding(10, 5),
+                enabledOfficerAccounts, getPadding(10, 5),
+                disabledOfficerAccounts, getPadding(10, 5),
+                enabledAdminAccounts, getPadding(10, 5),
+                disabledAdminAccounts, getPadding(10, 5),
                 addUserButton, getPadding(10, 5),
                 removeUserButton, getPadding(10, 5),
                 back
@@ -1419,57 +1486,51 @@ public class PartyRental {
         mainPlacer.verticalPlacer(elements);
         JPanel container = mainPlacer.getContainer();
 
-        load.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JFrame frame = new JFrame("Select CSV File");
+        load.addActionListener(e -> {
+            JFrame frame = new JFrame("Select CSV File");
 
-                JFileChooser fileChooser = new JFileChooser();
-                int result = fileChooser.showOpenDialog(frame);
+            JFileChooser fileChooser = new JFileChooser();
+            int result = fileChooser.showOpenDialog(frame);
 
-                if (result == JFileChooser.APPROVE_OPTION) {
-                    String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
-                    loadedArray[0] = true;
-                    navigator.close();
-                    loadDataFiles(selectedFile, loadedArray);
-                };
+            if (result == JFileChooser.APPROVE_OPTION) {
+                String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
+                loadedArray[0] = true;
+                navigator.close();
+                loadDataFiles(selectedFile, loadedArray);
             }
         });
         final HashMap<String, Item> toDB = items;
-        approve.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                for(Item item : toDB.values()) {
-                    if(item.getId() == -1) {
-                        Object[] values = new Object[]{
-                            item.getDescription(), item.getRate(), item.getCreatedBy(),
-                            getFDate(item.getDate(), "mm-dd-yy"), item.getStock(), item.getAvailable(),
-                            item.getReserved(), item.getRented()
-                        };
-                        try {
-                            ResultSet rs = valuedQuery(scripts.insertItem, values);
-                            rs.close();
-                        } catch (SQLException ex) {
-                            JOptionPane.showMessageDialog(mainFrame, "SQL Error");
-                        }
-                    } else {
-                        Object[] values = new Object[]{
-                                item.getRate(), item.getStock(), item.getAvailable(),
-                                item.getId()
+        approve.addActionListener(e -> {
+            for(Item item : toDB.values()) {
+                if(item.getId() == -1) {
+                    Object[] values = new Object[]{
+                        item.getDescription(), item.getRate(), item.getCreatedBy(),
+                        getFDate(item.getDate(), "mm-dd-yy"), item.getStock(), item.getAvailable(),
+                        item.getReserved(), item.getRented()
+                    };
+                    try {
+                        ResultSet rs = valuedQuery(scripts.insertItem, values);
+                        rs.close();
+                    } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(mainFrame, "SQL Error");
+                    }
+                } else {
+                    Object[] values = new Object[]{
+                            item.getRate(), item.getStock(), item.getAvailable(),
+                            item.getId()
 //                              "UPDATE item SET rate = ?, stock = ?, available = ? WHERE id = ?";
-                        };
-                        try {
-                            ResultSet rs = valuedQuery(scripts.updateItem, values);
-                            rs.close();
-                        } catch (SQLException ex) {
-                            JOptionPane.showMessageDialog(mainFrame, "SQL Error");
-                        }
+                    };
+                    try {
+                        ResultSet rs = valuedQuery(scripts.updateItem, values);
+                        rs.close();
+                    } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(mainFrame, "SQL Error");
                     }
                 }
-                navigator.close();
-                boolean[] loadedArray = {false};
-                loadDataFiles("", loadedArray);
             }
+            navigator.close();
+            boolean[] loadedArray1 = {false};
+            loadDataFiles("", loadedArray1);
         });
 
         panel.add(container);
