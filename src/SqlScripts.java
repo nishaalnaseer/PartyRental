@@ -70,4 +70,24 @@ public class SqlScripts {
 
     final String checkItem =
             "SELECT * FROM item WHERE description = ?";
+
+    final String getRequestedClients =
+            """
+                SELECT * FROM requested_customer
+                    JOIN customer_type ON requested_customer.type = customer_type.id
+                    WHERE status = 'REQUESTED'
+            """;
+
+    final String delRequestClient =
+            "DELETE FROM requested_customer WHERE id = ?";
+
+    final String insertCustomer =
+            "INSERT INTO customer (name, password, email, type, status)" +
+                    "VALUES (?, ?, ?, ?, ?)";
+
+    final String getTypeID =
+            "SELECT id FROM customer_type WHERE label = ?";
+
+    final String getGstRate =
+            "SELECT tax FROM customer_type WHERE label = ?";
 }

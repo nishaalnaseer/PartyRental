@@ -120,7 +120,7 @@ public class PartyRental {
 
         JLabel label = new JLabel("Sign In");
         label.setHorizontalAlignment(SwingConstants.CENTER);
-        JTextField usernameField = new JTextField("nishawl.naseer2@outlook.com");
+        JTextField usernameField = new JTextField("nishawl.naseer@outlook.com");
         JPasswordField passwordField = new JPasswordField("123");
         JButton loginButton = new JButton("Login");
         JButton createAccount = new JButton("Create Account");
@@ -308,20 +308,25 @@ public class PartyRental {
                 return;
             }
             String[] checkScripts = new String[]{
-                    scripts.checkClient, scripts.checkEmployee, scripts.checkNewClient};
+                    scripts.checkClient, scripts.checkEmployee, scripts.checkNewClient
+            };
             if(!checkUser(checkScripts, customerEmail)) {
                 JOptionPane.showMessageDialog(mainFrame, "Email taken!");
                 return;
             }
 
-            String script = scripts.createClient;
             try {
-                PreparedStatement preparedStatement = connection.prepareStatement(script);
-                preparedStatement.setString(1, customerName);
-                preparedStatement.setString(2, customerPassword);
-                preparedStatement.setString(3, customerEmail);
-                preparedStatement.setString(4, customerType);
-                preparedStatement.executeQuery();
+                Object[] values = {customerType};
+                ResultSet resultSet = valuedQuery(scripts.getTypeID, values);
+                resultSet.next();
+                int typeID = resultSet.getInt("id");
+                values = new Object[]{
+                        customerName, customerPassword, customerEmail, typeID
+                };
+
+                resultSet.close();
+                resultSet = valuedQuery(scripts.createClient, values);
+                resultSet.close();
                 JOptionPane.showMessageDialog(mainFrame, "Your request has been sent and is awaiting approval!");
                 navigator.close();
             } catch (SQLException ex) {
@@ -371,15 +376,14 @@ public class PartyRental {
 
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {
-                registrations, padding1, makeReservationButton,
-                padding2, viewReservationButton, padding3, rentOrder,
+                registrations, padding2, viewReservationButton, padding3, rentOrder,
                 padding4, returnOrder, getPadding(5, 5), logout
         };
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
 
         HashMap<Item, Integer> itemsForReser = new HashMap<>();
-        makeReservationButton.addActionListener(e -> createReservation(itemsForReser));
+        makeReservationButton.addActionListener(e -> createReservation(itemsForReser, 0, 0, 0));
         viewReservationButton.addActionListener(e -> viewReservations("officer"));
         registrations.addActionListener(e -> approveRegistration());
         rentOrder.addActionListener(e -> recordRentOrder());
@@ -431,27 +435,27 @@ public class PartyRental {
         /*
         function to approve/delete a customers registration request
          */
-        // TODO the following needs to be queried from a DB
-        Customer customer1 = new Customer(1, "String name", "String password", "String email",
-                "DOMESTIC", "ENABLED");
-        Customer[] customers = {
-                customer1,
-                customer1,
-                customer1,
-                customer1,
-                customer1,
-                customer1,
-                customer1,
-                customer1,
-                customer1,
-                customer1,
-                customer1,
-                customer1,
-                customer1,
-                customer1,
-                customer1,
-                customer1,
-        };
+        ArrayList<Customer> customers = new ArrayList<>();
+        ResultSet resultSet;
+        try {
+            resultSet = noValueQuery(scripts.getRequestedClients);
+            while(resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String name = resultSet.getString("name");
+                String password = resultSet.getString("password");
+                String email = resultSet.getString("email");
+                String label = resultSet.getString("label");
+                String status = resultSet.getString("status");
+                customers.add(new Customer(
+                        id, name, password, email, label, status
+                ));
+            }
+            resultSet.close();
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception);
+            return;
+        }
+
         JPanel panel = new JPanel(new GridBagLayout());
         final GridBagConstraints gbc2 = new GridBagConstraints();
         gbc2.weightx = 1;
@@ -480,10 +484,9 @@ public class PartyRental {
         gbc.gridy++;
         int y;
 
-        for(y = 0; y < customers.length; y++) {
-//            1, 1, items, "String remarks", new Date(), new Date(), new Date()
+        for(y = 0; y < customers.size(); y++) {
             gbc.gridy++;
-            Customer customer = customers[y];
+            Customer customer = customers.get(y);
             JLabel id = new JLabel(Integer.toString(customer.getClientId()));
             JLabel name = new JLabel(customer.getName());
             JLabel type = new JLabel(customer.getType());
@@ -501,41 +504,81 @@ public class PartyRental {
             }
         }
 
-        JScrollPane scrollPane = new JScrollPane(table);
-        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
-        scrollBar.setUnitIncrement(scrollBar.getUnitIncrement() * 8);
-        scrollPane.setPreferredSize(new Dimension(550, 200));
-        scrollPane.setMinimumSize(new Dimension(550, 200));
-        scrollPane.setViewportView(table);
-
+        JScrollPane scrollPane = scrollTable(table, 550, 200);
         panel.add(scrollPane, gbc2);
         gbc2.gridy = 1;
         panel.add(back, gbc2);
         navigator.open(panel, "makeReservation");
     }
 
+    public void delRequestedClient(int id) throws SQLException {
+        Object[] values = new Object[]{id};
+        valuedQuery(scripts.delRequestClient, values);
+    }
+
     private void customerApproveReject(Customer customer) {
-        JLabel id = new JLabel("id: " + customer.getClientId());
-        JLabel name = new JLabel("Name: " + customer.getName());
-        JLabel email = new JLabel("Name: " + customer.getEmail());
-        JLabel type = new JLabel("Type: " + customer.getType());
-        JLabel status = new JLabel("Name: " + customer.getName());
+        int idRaw = customer.getClientId();
+        String type = customer.getType();
+        String customerName = customer.getName();
+        String customerEmail = customer.getEmail();
+        String customerStatus = customer.getStatus();
+
+        JLabel id = new JLabel("id: " + idRaw);
+        JLabel name = new JLabel("Name: " + customerName);
+        JLabel email = new JLabel("Name: " + customerEmail);
+        JLabel typeLabel = new JLabel("Type: " + type);
+        JLabel status = new JLabel("Status: " + customerStatus);
         JButton approve = new JButton("Approve");
         JButton reject = new JButton("Reject");
         JButton back = new JButton("Back");
         Component[] elements = {
-                id, name, email, type, status, getPadding(40, 5),
+                id, name, email, typeLabel, status, getPadding(40, 5),
                 approve, getPadding(40, 5), reject, getPadding(40, 5),
                 back
         };
-        back.addActionListener(e -> navigator.close());
-        approve.addActionListener(e -> {
-            // TODO query db accordingly
+        back.addActionListener(e -> {
             navigator.close();
+            navigator.close();
+            approveRegistration();
+        });
+        approve.addActionListener(e -> {
+            try {
+                Object[] values = new Object[]{type};
+                ResultSet resultSet = valuedQuery(scripts.getTypeID, values);
+                resultSet.next();
+                int typeId = resultSet.getInt("id");
+                String customerPassword = sha256("123");
+                values = new Object[]{
+                        customerName, customerPassword, customerEmail,
+                        typeId, "ENABLED"
+                };
+                valuedQuery(scripts.insertCustomer, values);
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(mainFrame, ex.getMessage());
+                return;
+            }
+            try {
+                delRequestedClient(idRaw);
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(mainFrame, ex.getMessage());
+                return;
+            }
+
+            navigator.close();
+            navigator.close();
+            approveRegistration();
         });
         reject.addActionListener(e -> {
-            // TODO query db accordingly
+            try {
+                delRequestedClient(idRaw);
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(mainFrame, ex.getMessage());
+                return;
+            }
+
             navigator.close();
+            navigator.close();
+            approveRegistration();
         });
 
         GuiPlacer placer = new GuiPlacer(400, 600);
@@ -562,19 +605,39 @@ public class PartyRental {
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
 
-        HashMap<Item, Integer> itemsForReser = new HashMap<>();
-        makeReservationButton.addActionListener(e -> createReservation(itemsForReser));
+        HashMap<Item, Integer> itemsForReservation = new HashMap<>();
+        makeReservationButton.addActionListener(e -> createReservation(itemsForReservation, 0, 0, 0));
         viewReservationButton.addActionListener(e -> viewReservations("customer"));
 
         panel.add(container);
         navigator.open(panel, "createAccount");
     }
 
-    private void createReservation(HashMap<Item, Integer> itemsForReservation) {
+    private void createReservation(HashMap<Item, Integer> itemsForReservation,
+                                   float subtotalValue, float gstValue, float totalValue) {
         // TODO this code below needs to be queried form DB
 
         JPanel panel = new JPanel();
-//        HashMap<Item, Integer> itemsForReser = new HashMap<>();
+        if(gstValue == 0) {
+            try {
+                Object[] values = new Object[]{customer.getType()};
+                ResultSet resultSet = valuedQuery(scripts.getGstRate, values);
+                resultSet.next();
+                gstValue = resultSet.getFloat("tax");
+                resultSet.close();
+            } catch (SQLException exception) {
+                JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+                return;
+            }
+        }
+        HashMap<String, Item> items;
+
+        try {
+            items = dbToHashMap(false);
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception);
+            return;
+        }
 
         final GridBagConstraints gbc = new GridBagConstraints();
         JPanel table = new JPanel(new GridBagLayout());
@@ -585,14 +648,17 @@ public class PartyRental {
         JLabel qtyHeading = new JLabel("Qty");
         JLabel subTotal = new JLabel("Subtotal");
         JLabel gstLabel = new JLabel("GST");
-        JLabel subTotalAmount = new JLabel("amount");
-        JLabel gstLabelAmount = new JLabel("amount");
-        JLabel gstRate = new JLabel("gstRate");
+        JLabel subTotalAmount = new JLabel(String.valueOf(subtotalValue));
+        JLabel gstLabelAmount = new JLabel(String.valueOf(subtotalValue * gstValue /100));
+        JLabel gstRate = new JLabel(gstValue+"%");
         JLabel total = new JLabel("Total");
-        JLabel totalAmount = new JLabel("Total");
+        JLabel itemRateHeading = new JLabel("Rate");
+
+        totalValue += subtotalValue + (subtotalValue * gstValue /100);
+        JLabel totalAmount = new JLabel(String.valueOf(totalValue));
 
         JComboBox<String> itemDropDown = new JComboBox<>();
-        for (Item item : this.items.values()) {
+        for (Item item : items.values()) {
             itemDropDown.addItem(item.getDescription());
         }
         JTextField qty = new JTextField("Quantity");
@@ -603,7 +669,9 @@ public class PartyRental {
         itemAdder.add(itemDropDown);
         itemAdder.add(qty);
         itemAdder.add(add);
-        add.addActionListener(e -> {
+        float finalGstValue = gstValue;
+        float finalTotalValue = totalValue;
+        add.addActionListener(e ->  {
             String itemDesc = (String) itemDropDown.getSelectedItem();
             if(itemDesc == null) {
                 return;
@@ -614,6 +682,7 @@ public class PartyRental {
             try {
                 amount = Integer.parseInt(qty.getText());
             } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(mainFrame, ex.getMessage());
                 return;
             }
 
@@ -625,8 +694,9 @@ public class PartyRental {
                 prevQty = amount;
             }
             itemsForReservation.put(item, prevQty);
+            float finalSubtotalValue = (amount * item.getRate())  + subtotalValue;
             navigator.close();
-            createReservation(itemsForReservation);
+            createReservation(itemsForReservation, finalSubtotalValue, finalGstValue, finalTotalValue);
         });
 
         gbc.gridy = 0;
@@ -634,6 +704,8 @@ public class PartyRental {
         table.add(nameHeading, gbc);
         gbc.gridx = 1;
         table.add(qtyHeading, gbc);
+        gbc.gridx = 2;
+        table.add(itemRateHeading, gbc);
         gbc.gridy = 1;
 
         for(Item item : itemsForReservation.keySet()) {
@@ -641,15 +713,14 @@ public class PartyRental {
 
             JLabel name =  new JLabel(item.getDescription());
             JLabel valueHolder =  new JLabel(value.toString());
-            JLabel rate =  new JLabel("rate");
+            JLabel rate =  new JLabel(String.valueOf(item.getRate()));
             JLabel amount =  new JLabel("amount");
 
             JButton edit = new JButton("Edit");
             JButton delete = new JButton("Delete");
-
             delete.addActionListener(e -> {
                 itemsForReservation.remove(item);
-                createReservation(itemsForReservation);
+                createReservation(itemsForReservation, subtotalValue, finalGstValue, finalTotalValue);
             });
             edit.addActionListener(new ActionListener() {
                 String text = "New Amount: ";
@@ -672,7 +743,6 @@ public class PartyRental {
                             return;
                         }
                     }
-//                    items.put(key, )
                 }
             });
 
@@ -727,6 +797,8 @@ public class PartyRental {
         table.add(totalAmount, gbc);
 
         GuiPlacer placer = new GuiPlacer(400, 800);
+        JButton back = new JButton("Back");
+        back.addActionListener(e -> navigator.close());
         Component[] elements = {
                 scrollPane, new JLabel(" "), remarks, rentDatePanel,
                 returnDatePanel, itemAdder, submit, back
@@ -739,7 +811,6 @@ public class PartyRental {
 
         panel.add(container);
         navigator.open(panel, "makeReservation");
-
     }
 
     private void displayReservation(ArrayList<Reservation> reservations, String panelDesc, String userType) {
