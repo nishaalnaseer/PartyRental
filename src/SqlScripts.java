@@ -47,6 +47,22 @@ public class SqlScripts {
             "INSERT INTO employee (name, password, email, role, status)" +
                     " VALUES (?, ?, ?, ?, ?)";
 
-    final String getAllEmployees =
+    final String searchAllEmployees =
             "SELECT * FROM employee WHERE email = ?";
+
+    final String getEmployees =
+            "SELECT * FROM employee";
+
+    final String getAllClients =
+            """
+              SELECT * FROM customer\s
+              JOIN customer_type ON customer.type = customer_type.id\s
+            """;
+
+    final String updateEmployeeStatus =
+            "UPDATE employee SET status = ? WHERE id = ?";
+
+    final String updateClientStatus =
+            "UPDATE customer SET status = ? WHERE id = ?";
+
 }

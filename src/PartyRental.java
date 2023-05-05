@@ -1081,7 +1081,7 @@ public class PartyRental {
                 return;
             }
             Object[] values = new Object[]{employeeEmail};
-            if(!getEntries(scripts.getAllEmployees, values).equals("0")) {
+            if(!getEntries(scripts.searchAllEmployees, values).equals("0")) {
                 JOptionPane.showMessageDialog(mainFrame, "Email Already Taken");
                 return;
             }
@@ -1118,54 +1118,50 @@ public class PartyRental {
     }
 
     private void removeUser(){
+        JPanel table = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        table.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        table.setPreferredSize(new Dimension(650, 300));
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weighty= 0;
+        gbc.weightx= 1;
+        table.add(new Label("Customers:"), gbc);
+        gbc.gridy++;
 
-        String[] types = new String[]{"Customer", "Employee"};
-        JComboBox<String> type = new JComboBox<>(types);
-
-        JPanel panel = new JPanel(new GridBagLayout());
-        JButton delete = new JButton("Delete User");
-        JButton load = new JButton("Load User Data");
-        JTextField id = new JTextField("EmployeeID/ClientID");
-
-        clearTextField(id);
-
-        JLabel name = new JLabel("Name: ");
-        JLabel idLabel = new JLabel("ID: ");
-        JLabel typeLabel = new JLabel("Role/Type: ");
-        JLabel email = new JLabel("Email: ");
-        GuiPlacer smallPlacer = new GuiPlacer(400, 500);
-        JComponent[] smallElements = new JComponent[]{
-                name, idLabel, typeLabel, email
+        JComponent[] headings = new JComponent[] {
+                new JLabel("ID"), new JLabel("Name"), new JLabel("Email"), new JLabel("Role/Type"),
+                new JLabel("Status")
         };
-        smallPlacer.verticalPlacer(smallElements);
-        JPanel details = smallPlacer.getContainer();
+        gbc.gridy++;
+        for(int x = 0; x < headings.length; x++) {
+            JComponent element = headings[x];
+            gbc.gridx = x;
+            table.add(element, gbc);
+        }
+        displayUsers(scripts.getAllClients, table, gbc);
+        gbc.gridy++;
+        table.add(getPadding(5, 10), gbc);
+        gbc.gridy++;
+        gbc.gridx = 1;
+        table.add(new Label("Employees:"), gbc);
+        gbc.gridy++;
+        displayUsers(scripts.getEmployees, table, gbc);
 
-        load.addActionListener(e -> {
-            String selection = (String) type.getSelectedItem();
-            if (selection == null) {
-                return;
-            } else if (selection.equals("Customer")) {
-                typeLabel.setText("Type: ");
-            } else if (selection.equals("Employee")) {
-                typeLabel.setText("Role: ");
-            }
-        });
+        JScrollPane scrollPane = scrollTable(table, 670, 300);
 
-        JComponent[] mainElements = new JComponent[]{
-                details, getPadding(10, 5),
-                id, getPadding(10, 5),
-                type, getPadding(10, 5),
-                load, getPadding(10, 5),
-                delete, getPadding(10, 5),
+        GuiPlacer placer = new GuiPlacer(700, 320);
+        JLabel title = new JLabel("Change Statuses of Accounts");
+        title.setHorizontalAlignment(SwingConstants.CENTER);
+        JComponent[] elements = new JComponent[] {
+                title, getPadding(5,10),
+                scrollPane, getPadding(5,10),
                 back
         };
-        GuiPlacer placer = new GuiPlacer(400, 500);
-        placer.verticalPlacer(mainElements);
-        JPanel container = placer.getContainer();
-
-        panel.add(container);
+        placer.verticalPlacer(elements);
+        JPanel panel = placer.getContainer();
         navigator.open(panel, "removeUser");
-
     }
 
     private void displayUsers(String script, JPanel table, GridBagConstraints gbc) {
@@ -1177,26 +1173,55 @@ public class PartyRental {
             return;
         }
         String unique;
-        if(script.equals(scripts.getAllEmployees)) {
+        if(script.equals(scripts.getEmployees)) {
             unique = "role";
         } else {
             unique = "label";
         }
 
+        gbc.gridy++;
         try {
             while(resultSet.next()) {
-                JLabel id = new JLabel(String.valueOf(resultSet.getInt("id")));
+                int idRaw = resultSet.getInt("id");
+                JLabel id = new JLabel(String.valueOf(idRaw));
                 JLabel name = new JLabel(resultSet.getString("name"));
                 JLabel email = new JLabel(resultSet.getString("email"));
                 JLabel roleType = new JLabel(resultSet.getString(unique));
                 JLabel status = new JLabel(resultSet.getString("status"));
-                JButton setStatus = new JButton("Set Status");
-                JComponent[] elements = new JComponent[]{id, name, email, roleType, status};
+                JButton change;
+                if(resultSet.getString("status").equals("ENABLED")) {
+                    change = new JButton("DISABLE");
+                } else {
+                    change = new JButton("ENABLE");
+                }
+                JComponent[] elements = new JComponent[]{id, name, email, roleType, status, change};
+                change.addActionListener(e -> {
+//                    String selectedOption = (String) JOptionPane.showInputDialog(mainFrame, "Select New Status", "Status",
+//                            JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+                    String selectedOption = change.getText();
+                    if(selectedOption != null) {
+                        selectedOption += "D";
+                        Object[] values = new Object[]{selectedOption, idRaw};
+                        try {
+                            if(unique.equals("role")) {
+                                valuedQuery(scripts.updateEmployeeStatus, values);
+                            } else {
+                                valuedQuery(scripts.updateClientStatus, values);
+                            }
+                            JOptionPane.showMessageDialog(mainFrame, "Success!");
+                            navigator.close();
+                            removeUser();
+                        } catch (SQLException exception) {
+                            JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+                        }
+                    }
+                });
                 for(int x = 0; x < elements.length; x++) {
                     JComponent element = elements[x];
                     gbc.gridx = x;
                     table.add(element, gbc);
                 }
+                gbc.gridy++;
             }
         } catch (SQLException exception) {
             JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
@@ -1208,6 +1233,11 @@ public class PartyRental {
             JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
             return;
         }
+    }
+
+    private String dateToDB(Date date) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        return dateFormat.format(date);
     }
 
     private String getEntries(String script, Object[] values) {
@@ -1313,6 +1343,7 @@ public class PartyRental {
         JButton add = new JButton("Add");
         JLabel heading = new JLabel("Add Item");
         heading.setHorizontalAlignment(SwingConstants.CENTER);
+        JTextField qty = new JTextField("Quantity");
         JTextField[] fields = new JTextField[]{description, rate};
         clearManyTexts(fields);
 
@@ -1320,6 +1351,7 @@ public class PartyRental {
                 heading, getPadding(10, 5),
                 description, getPadding(10, 5),
                 rate, getPadding(10, 5),
+                qty, getPadding(10, 5),
                 add, getPadding(10, 5),
                 back
         };
@@ -1505,7 +1537,7 @@ public class PartyRental {
                 if(item.getId() == -1) {
                     Object[] values = new Object[]{
                         item.getDescription(), item.getRate(), item.getCreatedBy(),
-                        getFDate(item.getDate(), "mm-dd-yy"), item.getStock(), item.getAvailable(),
+                        dateToDB(item.getDate()), item.getStock(), item.getAvailable(),
                         item.getReserved(), item.getRented()
                     };
                     try {
