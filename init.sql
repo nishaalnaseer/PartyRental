@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `customer` (
   UNIQUE KEY `email` (`email`) USING BTREE,
   KEY `FK_customer_customer_type` (`type`),
   CONSTRAINT `FK_customer_customer_type` FOREIGN KEY (`type`) REFERENCES `customer_type` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
 
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `customer_type` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `label` (`label`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
 
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS `employee` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
 
@@ -69,12 +69,15 @@ CREATE TABLE IF NOT EXISTS `item` (
   `rate` float NOT NULL,
   `created_by` int(11) NOT NULL,
   `created_on` date NOT NULL,
+  `stock` int(11) NOT NULL,
+  `available` int(11) NOT NULL,
+  `reserved` int(11) NOT NULL,
+  `rented` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `description` (`description`),
   UNIQUE KEY `id` (`id`) USING BTREE,
-  KEY `FK_item_employee` (`created_by`),
-  CONSTRAINT `FK_item_employee` FOREIGN KEY (`created_by`) REFERENCES `employee` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  KEY `FK_item_employee` (`created_by`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
 
@@ -101,12 +104,14 @@ CREATE TABLE IF NOT EXISTS `requested_customer` (
   `name` varchar(100) NOT NULL,
   `password` varchar(70) NOT NULL,
   `email` varchar(50) NOT NULL,
-  `type` enum('DOMESTIC','GOVERNMENT','DIPLOMATIC','PRIVATE','RESORTS') NOT NULL,
+  `type` int(11) NOT NULL DEFAULT 0,
   `status` enum('REQUESTED','ENABLED','DISABLED') NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  UNIQUE KEY `email` (`email`),
+  KEY `FK_requested_customer_customer_type` (`type`),
+  CONSTRAINT `FK_requested_customer_customer_type` FOREIGN KEY (`type`) REFERENCES `customer_type` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
 

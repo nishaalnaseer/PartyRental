@@ -181,7 +181,6 @@ public class PartyRental {
                 }
             } catch (SQLException exception) {
                 JOptionPane.showMessageDialog(mainFrame, "SQL Error!");
-                return;
             }
         });
         clearPasswordTextFields(usernameField, passwordField);
@@ -215,6 +214,7 @@ public class PartyRental {
         });
 
     }
+
     private void clearPasswordField(JPasswordField passwordField) {
         passwordField.addMouseListener(new MouseAdapter() {
             private boolean reset = true;
@@ -228,6 +228,7 @@ public class PartyRental {
         });
 
     }
+
     private void clearPasswordTextFields(JTextField textField, JPasswordField passwordField) {
         clearTextField(textField);
         clearPasswordField(passwordField);
@@ -817,7 +818,7 @@ public class PartyRental {
         panel.add(scrollPane, gbc2);
         gbc2.gridy = 1;
         panel.add(back, gbc2);
-        navigator.open(panel, "makeReservation");
+        navigator.open(panel, panelDesc);
     }
 
     private void viewReservations(String userType) {
@@ -1208,7 +1209,7 @@ public class PartyRental {
                             } else {
                                 valuedQuery(scripts.updateClientStatus, values);
                             }
-                            JOptionPane.showMessageDialog(mainFrame, "Success!");
+//                            JOptionPane.showMessageDialog(mainFrame, "Success!");
                             navigator.close();
                             removeUser();
                         } catch (SQLException exception) {
@@ -1310,20 +1311,17 @@ public class PartyRental {
     }
 
     private void inventoryManagement() {
-
-//        JPanel stats;
-
         JButton add = new JButton("Add Item");
-        JButton remove = new JButton("Remove Item");
+        JButton adjust = new JButton("Adjust Inventory");
         JButton back = new JButton("Back");
         back.addActionListener(e -> navigator.close());
         add.addActionListener(e -> addItem());
-        remove.addActionListener(e -> removeItem());
+        adjust.addActionListener(e -> viewItems());
 
         GuiPlacer mainPlacer = new GuiPlacer(400, 500);
         JComponent[] mainElements = new  JComponent[]{
                 add, getPadding(10, 5),
-                remove, getPadding(10, 5),
+                adjust, getPadding(10, 5),
                 back, getPadding(10, 5),
         };
         mainPlacer.verticalPlacer(mainElements);
@@ -1344,7 +1342,7 @@ public class PartyRental {
         JLabel heading = new JLabel("Add Item");
         heading.setHorizontalAlignment(SwingConstants.CENTER);
         JTextField qty = new JTextField("Quantity");
-        JTextField[] fields = new JTextField[]{description, rate};
+        JTextField[] fields = new JTextField[]{description, rate, qty};
         clearManyTexts(fields);
 
         JComponent[] elements = new JComponent[]{
@@ -1355,6 +1353,43 @@ public class PartyRental {
                 add, getPadding(10, 5),
                 back
         };
+
+        add.addActionListener(e -> {
+            int quantity;
+            float rateValue;
+            try {
+                quantity = Integer.parseInt(qty.getText());
+                rateValue = Float.parseFloat(qty.getText());
+            } catch (NumberFormatException exception) {
+                JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+                return;
+            }
+
+            String descriptionValue = description.getText();
+            Object[] values = new Object[]{descriptionValue};
+            String entries = getEntries(scripts.checkItem, values);
+            if(!entries.equals("0")) {
+                JOptionPane.showMessageDialog(mainFrame, "Item already exists");
+                return;
+            }
+//            "INSERT INTO item (description, rate, created_by, created_on, " +
+//                    "stock, available, reserved, rented) " +
+//                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+
+            values = new Object[]{
+                    descriptionValue, rateValue, employee.getId(), dateToDB(new Date()),
+                    quantity, quantity, 0, 0};
+            try {
+                valuedQuery(scripts.insertItem, values);
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(mainFrame, ex.getMessage());
+                return;
+            }
+            JOptionPane.showMessageDialog(mainFrame, "Success!!!");
+            navigator.close();
+            addItem();
+        });
 
         GuiPlacer placer = new GuiPlacer(400,500);
         placer.verticalPlacer(elements);
@@ -1384,7 +1419,7 @@ public class PartyRental {
         return statement.executeQuery();
     }
 
-    private HashMap<String, Item> dbToHashMap() throws SQLException {
+    private HashMap<String, Item> dbToHashMap(boolean num) throws SQLException {
         ResultSet data = noValueQuery(scripts.getItems);
         HashMap<String, Item> map = new HashMap<>();
 
@@ -1394,8 +1429,6 @@ public class PartyRental {
             float rate = data.getFloat("rate");
             int createdBy = data.getInt("created_by");
             Date createdOn = data.getDate("created_on");
-//            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yy");
-//            Date createdOn = new Date();
             int stock = data.getInt("stock");
             int reserved = data.getInt("reserved");
             int available = data.getInt("available");
@@ -1404,7 +1437,11 @@ public class PartyRental {
                     id, description, rate, createdBy, createdOn,
                     stock, available, reserved, rented
             );
-            map.put(description, item);
+            if(num) {
+                map.put(String.valueOf(item.getId()), item);
+            } else {
+                map.put(description, item);
+            }
         }
 
         data.close();
@@ -1448,7 +1485,7 @@ public class PartyRental {
         HashMap<String, Item> items;
 //        final boolean[] loadedArray = {false};
         try {
-            items = dbToHashMap();
+            items = dbToHashMap(false);
         } catch (SQLException exception) {
             JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
             return;
@@ -1642,14 +1679,88 @@ public class PartyRental {
         }
     }
 
-    private void removeItem() {
+    private void editItem(Item item) {
         JPanel panel = new JPanel(new GridBagLayout());
+
+        JLabel id = new JLabel("ID: " + item.getId());
+        JTextField description = new JTextField(item.getDescription());
+        JTextField rate = new JTextField(String.valueOf(item.getRate()));
+        JTextField qty = new JTextField("Amount");
+        JButton update = new JButton("Update");
+        JButton back = new JButton("Back");
+        clearTextField(qty);
+        JComponent[] elements = new JComponent[]{
+            id, description, rate, qty, update, back
+        };
+        back.addActionListener(e -> {
+            navigator.close();
+            navigator.close();
+            viewItems();
+        });
+
+        update.addActionListener(e -> {
+            int quantity;
+            float rateValue;
+
+            try {
+                quantity = Integer.parseInt(qty.getText());
+                rateValue = Float.parseFloat(rate.getText());
+                if(rateValue < 1) {
+                    throw new BelowZeroError("Rate Below One");
+                }
+            } catch (NumberFormatException | BelowZeroError exception) {
+                JOptionPane.showMessageDialog(mainFrame, "Invalid values for quantity and or rate");
+                return;
+            }
+
+            try {
+                item.adjustAvailable(quantity);
+                item.adjustStock(quantity);
+            } catch (BelowZeroError exception) {
+                JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+                return;
+            }
+            item.setDescription(description.getText());
+            item.setRate(rateValue);
+
+            Object[] values = new Object[] {
+                    item.getDescription(), item.getRate(),
+                    item.getStock(), item.getAvailable(),
+                    item.getId()
+            };
+            try {
+                valuedQuery(scripts.updateItem2, values);
+                JOptionPane.showMessageDialog(mainFrame, "Success");
+                navigator.close();
+                editItem(item);
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(mainFrame, ex.getMessage());
+            }
+        });
+
+        GuiPlacer placer = new GuiPlacer(400, 500);
+        placer.verticalPlacer(elements);
+        JPanel container = placer.getContainer();
+
+        panel.add(container);
+        navigator.open(panel, "editItem");
+    }
+
+    private void viewItems() {
+        JPanel panel = new JPanel(new GridBagLayout());
+
+        HashMap<String, Item> items;
+        try {
+            items = dbToHashMap(true);
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(mainFrame, ex.getMessage());
+            return;
+        }
 
         final GridBagConstraints gbc = new GridBagConstraints();
         JPanel table = new JPanel(new GridBagLayout());
         gbc.weightx = 1;
-        gbc.weighty = 0;
-        gbc.gridx = 0;
+        gbc.weighty = 1;
         gbc.gridy = 0;
 
         JLabel idHeading = new JLabel("ID");
@@ -1658,36 +1769,32 @@ public class PartyRental {
         JLabel createdByHeading = new JLabel("Created By");
         JLabel createdOnHeading = new JLabel("Created On");
 
-        table.add(idHeading, gbc);
-        gbc.gridx = 1;
-        table.add(descriptionHeading, gbc);
-        gbc.gridx = 2;
-        table.add(rateHeading, gbc);
-        gbc.gridx = 3;
-        table.add(createdByHeading, gbc);
-        gbc.gridx = 4;
-        table.add(createdOnHeading, gbc);
+        JComponent[] elements = new JComponent[]{
+                idHeading,
+                descriptionHeading,
+                rateHeading,
+                createdByHeading,
+                createdOnHeading,
+        };
+        for(int x = 0; x < elements.length; x++) {
+            gbc.gridx = x;
+            JComponent element = elements[x];
+            table.add(element, gbc);
+        }
 
-        ArrayList<Item> items = new ArrayList<>();
-//        items.add(new Item(1, 1, new Date(), "Chair", 50, stock, reserved, rented));
-//        items.add(new Item(1, 1, new Date(), "Chair", 50, stock, reserved, rented));
-//        items.add(new Item(1, 1, new Date(), "Chair", 50, stock, reserved, rented));
-//        items.add(new Item(1, 1, new Date(), "Chair", 50, stock, reserved, rented));
-
-        for(int x = 0; x < items.size(); x++) {
+        for(Item item : items.values()) {
             gbc.gridy++;
-
-            Item item = items.get(x);
             JLabel id = new JLabel(String.valueOf(item.getId()));
             JLabel description = new JLabel(item.getDescription());
             JLabel rate = new JLabel(String.valueOf(item.getRate()));
             JLabel createdBy = new JLabel(String.valueOf(item.getCreatedBy()));
             JLabel createdOn = new JLabel(getFDate(item.getDate(), "dd-MMM-yy"));
-            JButton delete = new JButton("Delete");
+            JButton edit = new JButton("Adjust");
 
             JComponent[] tableElements = new JComponent[]{
-                    id, description, rate, createdBy, createdOn, delete
+                    id, description, rate, createdBy, createdOn, edit
             };
+            edit.addActionListener(e -> editItem(item));
 
             for(int i = 0; i < tableElements.length; i++) {
                 gbc.gridx = i;
@@ -1695,16 +1802,17 @@ public class PartyRental {
                 table.add(element, gbc);
             }
         }
-
-        JComponent[] elements = new JComponent[]{
-                table, getPadding(10, 5),
+        JScrollPane scroll = scrollTable(table, 380,480);
+        JLabel title = new JLabel("Current Inventory");
+        title.setHorizontalAlignment(SwingConstants.CENTER);
+        elements = new JComponent[]{
+                title, getPadding(10, 5),
+                scroll, getPadding(10, 5),
                 back
         };
-
-        GuiPlacer placer = new GuiPlacer(400,500);
+        GuiPlacer placer = new GuiPlacer(400,550);
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
-
         panel.add(container);
         navigator.open(panel, "removeItem");
     }

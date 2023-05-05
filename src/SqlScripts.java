@@ -29,6 +29,9 @@ public class SqlScripts {
     final String updateItem =
             "UPDATE item SET rate = ?, stock = ?, available = ? WHERE id = ?";
 
+    final String updateItem2 =
+            "UPDATE item SET description = ?, rate = ?, stock = ?, available = ? WHERE id = ?";
+
     final String insertItem =
             "INSERT INTO item (description, rate, created_by, created_on, " +
                     "stock, available, reserved, rented) " +
@@ -65,4 +68,6 @@ public class SqlScripts {
     final String updateClientStatus =
             "UPDATE customer SET status = ? WHERE id = ?";
 
+    final String checkItem =
+            "SELECT * FROM item WHERE description = ?";
 }
