@@ -5,7 +5,7 @@ import java.util.HashMap;
 public class Reservation {
     private final int reservationId;
     private final Customer customer;
-    private HashMap<Item, Integer> items = new HashMap<>();
+    private final HashMap<String, Integer> items;
     private String remarks;
     private final Date reservationDate;
     private Date rentDate;
@@ -16,7 +16,7 @@ public class Reservation {
     private float subtotal = 0;
     private float gst = 0;
 
-    public Reservation(int reservationId, int customerId, HashMap<Item, Integer> items,
+    public Reservation(int reservationId, Customer customer, HashMap<String, Integer> items,
                        String remarks, Date reservationDate, Date rentDate,
                        Date returnDate) {
         this.reservationId = reservationId;
@@ -28,9 +28,7 @@ public class Reservation {
         this.status = ReservationStatus.valueOf("REQUESTED");
 
         // TODO query the parameters for the following variable from DB
-        this.customer = new Customer(
-                customerId, "String name", "String password",
-                "a@.com", "DOMESTIC","ENABLED");
+        this.customer = customer;
 
     }
 
@@ -43,7 +41,7 @@ public class Reservation {
     public int getReservationId() {
         return reservationId;
     }
-    public HashMap<Item, Integer> getItems() {
+    public HashMap<String, Integer> getItems() {
         return items;
     }
 
@@ -87,24 +85,24 @@ public class Reservation {
         return subtotal;
     }
 
-    void addItems(Item[] items) {
-        for(int x = 0; x < items.length; x++) {
-            Item item = items[x];
-
-            int prevQty;
-            try {
-                prevQty = this.items.get(item);
-                prevQty++;
-                this.items.put(item, prevQty);
-            } catch (NullPointerException ex) {
-                this.items.put(item, 1);
-            }
-
-            float rate = item.getRate();
-//            gst+= rate * 0.06;
-            subtotal+=rate;
-        }
-    }
+//    void addItems(Item[] items) {
+//        for(int x = 0; x < items.length; x++) {
+//            Item item = items[x];
+//
+//            int prevQty;
+//            try {
+//                prevQty = this.items.get(item);
+//                prevQty++;
+//                this.items.put(item, prevQty);
+//            } catch (NullPointerException ex) {
+//                this.items.put(item, 1);
+//            }
+//
+//            float rate = item.getRate();
+////            gst+= rate * 0.06;
+//            subtotal+=rate;
+//        }
+//    }
 
     public Customer getCustomer() {
         return customer;

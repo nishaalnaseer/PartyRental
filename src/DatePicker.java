@@ -7,13 +7,13 @@ import java.util.HashMap;
 
 public class DatePicker {
     private final JPanel panel;
-    private JComboBox<String> dayComboBox;
+    private final JComboBox<String> dayComboBox;
     private final JComboBox<String> monthComboBox;
     private final JComboBox<String> yearComboBox;
     private final JLabel label;
     final HashMap<String, Integer> monthDays;
 
-    DatePicker(String text) {
+    DatePicker(String text, Object[] selectedDate) {
         monthComboBox = new JComboBox<>(new String[]{ "Select Month",
                 "January", "February", "March", "April", "May", "June", "July",
                 "August", "September", "October", "November", "December"
@@ -63,6 +63,11 @@ public class DatePicker {
         panel = new JPanel();
         dayComboBox = new JComboBox<>();
         enterDays(31);
+
+        yearComboBox.setSelectedItem(selectedDate[2]);
+        monthComboBox.setSelectedItem(selectedDate[1]);
+        dayComboBox.setSelectedItem(selectedDate[0]);
+
         panel.add(label);
         panel.add(dayComboBox);
         panel.add(monthComboBox);
@@ -127,7 +132,12 @@ public class DatePicker {
     }
 
     String getDate() {
-        String day = (String) dayComboBox.getSelectedItem();
-        return "Hello";
+        return dayComboBox.getSelectedItem() + "-" +
+                     monthComboBox.getSelectedItem() + "-" +
+                     yearComboBox.getSelectedItem();
+    }
+
+    Object[] getDateRaw(){
+        return new Object[]{dayComboBox.getSelectedItem(), monthComboBox.getSelectedItem(), yearComboBox.getSelectedItem()};
     }
 }

@@ -23,5 +23,7 @@ public class Navigator {
         JPanel panel = stack.pop();
         layout.previous(root.getContentPane());
         this.root.remove(panel);
+        panel = null;  // manual garbage collection
+        System.gc();  // manual garbage collection
     }
 }

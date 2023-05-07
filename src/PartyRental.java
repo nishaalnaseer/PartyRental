@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 // csv parser
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -21,7 +22,8 @@ import java.awt.event.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
-
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 public class PartyRental {
 
@@ -81,18 +83,18 @@ public class PartyRental {
 //        fadas.put(nooo, 7);
 //        fadas.put(thisItem, 2);
 
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
 
         back.addActionListener(e -> navigator.close());
         logout.addActionListener(e -> navigator.close());
@@ -382,8 +384,10 @@ public class PartyRental {
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
 
-        HashMap<Item, Integer> itemsForReser = new HashMap<>();
-        makeReservationButton.addActionListener(e -> createReservation(itemsForReser, 0, 0, 0));
+        HashMap<String, Integer> itemsForReservation = new HashMap<>();
+        Object[] selectedStartDate = new String[]{"Select Day", "Select Month", "Select Year"};
+        Object[] selectedEndDate = new String[]{"Select Day", "Select Month", "Select Year"};
+        makeReservationButton.addActionListener(e -> createReservation(itemsForReservation, 0, 0, selectedStartDate, selectedEndDate, "officer"));
         viewReservationButton.addActionListener(e -> viewReservations("officer"));
         registrations.addActionListener(e -> approveRegistration());
         rentOrder.addActionListener(e -> recordRentOrder());
@@ -410,18 +414,18 @@ public class PartyRental {
 //        fadas.put(thisItem, 2);
 
         ArrayList<Reservation> reservations = new ArrayList<>();
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
 
         for(int x = 0; x < reservations.size(); x++) {
             Reservation reservation = reservations.get(0);
@@ -605,19 +609,29 @@ public class PartyRental {
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
 
-        HashMap<Item, Integer> itemsForReservation = new HashMap<>();
-        makeReservationButton.addActionListener(e -> createReservation(itemsForReservation, 0, 0, 0));
+        HashMap<String, Integer> itemsForReservation = new HashMap<>();
+        String[] selectedStartDate = new String[]{"Select Day", "Select Month", "Select Year"};
+        String[] selectedEndDate = new String[]{"Select Day", "Select Month", "Select Year"};
+        makeReservationButton.addActionListener(e -> createReservation(itemsForReservation, 0, 0, selectedStartDate, selectedEndDate, "customer"));
         viewReservationButton.addActionListener(e -> viewReservations("customer"));
 
         panel.add(container);
         navigator.open(panel, "createAccount");
     }
 
-    private void createReservation(HashMap<Item, Integer> itemsForReservation,
-                                   float subtotalValue, float gstValue, float totalValue) {
-        // TODO this code below needs to be queried form DB
+    private void createReservation(HashMap<String, Integer> itemsForReservation, float gstValue, long days,
+                                   Object[] selectedStartDate, Object[] selectedEndDate, String userType
 
-        JPanel panel = new JPanel();
+    ) {
+        JPanel panel = new JPanel(new GridBagLayout());
+        HashMap<String, Item> items;
+
+        try {
+            items = dbToHashMap(false);
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception);
+            return;
+        }
         if(gstValue == 0) {
             try {
                 Object[] values = new Object[]{customer.getType()};
@@ -630,14 +644,16 @@ public class PartyRental {
                 return;
             }
         }
-        HashMap<String, Item> items;
 
-        try {
-            items = dbToHashMap(false);
-        } catch (SQLException exception) {
-            JOptionPane.showMessageDialog(mainFrame, exception);
-            return;
+        float subtotalValue = 0;
+        JComboBox<String> itemDropDown = new JComboBox<>();
+        for(String description : itemsForReservation.keySet()) {
+            int quantity = itemsForReservation.get(description);
+            Item item = items.get(description);
+            subtotalValue += (item.getRate() * quantity)*days;
         }
+        float gstAmount = subtotalValue * gstValue / 100;
+        float totalValue = subtotalValue + gstAmount;
 
         final GridBagConstraints gbc = new GridBagConstraints();
         JPanel table = new JPanel(new GridBagLayout());
@@ -653,14 +669,19 @@ public class PartyRental {
         JLabel gstRate = new JLabel(gstValue+"%");
         JLabel total = new JLabel("Total");
         JLabel itemRateHeading = new JLabel("Rate");
-
-        totalValue += subtotalValue + (subtotalValue * gstValue /100);
+        JLabel perDayHeading = new JLabel("Per Day");
+        JLabel allDays = new JLabel(days + " Days");
         JLabel totalAmount = new JLabel(String.valueOf(totalValue));
 
-        JComboBox<String> itemDropDown = new JComboBox<>();
-        for (Item item : items.values()) {
+        DatePicker datePicker = new DatePicker("Renting Date", selectedStartDate);
+        JPanel rentDatePanel = datePicker.getPanel();
+        DatePicker datePicker2 = new DatePicker("Return Date", selectedEndDate);
+        JPanel returnDatePanel = datePicker2.getPanel();
+
+        for(Item item : items.values()) {
             itemDropDown.addItem(item.getDescription());
         }
+
         JTextField qty = new JTextField("Quantity");
         qty.setPreferredSize(new Dimension(50, 24));
         qty.setMinimumSize(new Dimension(50, 24));
@@ -670,7 +691,6 @@ public class PartyRental {
         itemAdder.add(qty);
         itemAdder.add(add);
         float finalGstValue = gstValue;
-        float finalTotalValue = totalValue;
         add.addActionListener(e ->  {
             String itemDesc = (String) itemDropDown.getSelectedItem();
             if(itemDesc == null) {
@@ -688,15 +708,44 @@ public class PartyRental {
 
             int prevQty;
             try {
-                prevQty = itemsForReservation.get(item);
-                prevQty += amount;
+                prevQty = itemsForReservation.get(item.getDescription());
+                if((amount += prevQty) > 0) {
+                    amount += prevQty;
+                } else {
+                    JOptionPane.showMessageDialog(mainFrame, "Total Quantity Cant Be Below Zero");
+                    return;
+                }
             } catch (NullPointerException ex) {
-                prevQty = amount;
+                // do nothing
             }
-            itemsForReservation.put(item, prevQty);
-            float finalSubtotalValue = (amount * item.getRate())  + subtotalValue;
+
+            String startDateRaw = datePicker.getDate();
+            String endDateRaw = datePicker2.getDate();
+            Date start;
+            Date end;
+            try {
+                SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
+                start = format.parse(startDateRaw);
+                end = format.parse(endDateRaw);
+            } catch (java.text.ParseException exception) {
+                itemsForReservation.put(item.getDescription(), amount);
+                navigator.close();
+                createReservation(itemsForReservation, finalGstValue, 0, datePicker.getDateRaw(), datePicker2.getDateRaw(), userType);
+                return;
+            }
+            LocalDate date1 = start.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDate date2 = end.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            long daysBetween = ChronoUnit.DAYS.between(date1, date2);
+
+            if(daysBetween <= 1) {
+                itemsForReservation.put(item.getDescription(), amount);
+                navigator.close();
+                createReservation(itemsForReservation, finalGstValue, 0, datePicker.getDateRaw(), datePicker2.getDateRaw(), userType);
+            }
+
+            itemsForReservation.put(item.getDescription(), amount);
             navigator.close();
-            createReservation(itemsForReservation, finalSubtotalValue, finalGstValue, finalTotalValue);
+            createReservation(itemsForReservation, finalGstValue, daysBetween, datePicker.getDateRaw(), datePicker2.getDateRaw(), userType);
         });
 
         gbc.gridy = 0;
@@ -706,21 +755,29 @@ public class PartyRental {
         table.add(qtyHeading, gbc);
         gbc.gridx = 2;
         table.add(itemRateHeading, gbc);
+        gbc.gridx = 3;
+        table.add(perDayHeading, gbc);
+        gbc.gridx = 4;
+        table.add(allDays, gbc);
         gbc.gridy = 1;
 
-        for(Item item : itemsForReservation.keySet()) {
-            Integer value = itemsForReservation.get(item);
+        for(String description : itemsForReservation.keySet()) {
+            Item item = items.get(description);
+            Integer value = itemsForReservation.get(description);
+            float amountValue = value * item.getRate();
 
             JLabel name =  new JLabel(item.getDescription());
             JLabel valueHolder =  new JLabel(value.toString());
             JLabel rate =  new JLabel(String.valueOf(item.getRate()));
-            JLabel amount =  new JLabel("amount");
+            JLabel amount = new JLabel(String.valueOf(amountValue));
+            JLabel allDaysLabel = new JLabel(String.valueOf(value*days*item.getRate()));
 
             JButton edit = new JButton("Edit");
             JButton delete = new JButton("Delete");
             delete.addActionListener(e -> {
-                itemsForReservation.remove(item);
-                createReservation(itemsForReservation, subtotalValue, finalGstValue, finalTotalValue);
+                itemsForReservation.remove(item.getDescription());
+                navigator.close();
+                createReservation(itemsForReservation, finalGstValue, 0, datePicker.getDateRaw(), datePicker2.getDateRaw(), userType);
             });
             edit.addActionListener(new ActionListener() {
                 String text = "New Amount: ";
@@ -732,8 +789,10 @@ public class PartyRental {
                         if (input != null) {
                             try {
                                 newAmount = Integer.parseInt(input);
-                                itemsForReservation.put(item, newAmount);
+                                itemsForReservation.put(item.getDescription(), newAmount);
                                 valueHolder.setText(String.valueOf(newAmount));
+                                navigator.close();
+                                createReservation(itemsForReservation, finalGstValue, 0, datePicker.getDateRaw(), datePicker2.getDateRaw(), userType);
                                 return;
                             } catch (NumberFormatException ex) {
                                 text = "Invalid!";
@@ -749,37 +808,57 @@ public class PartyRental {
             gbc.gridx = 0;
             table.add(name, gbc);
             gbc.gridx = 1;
-
             table.add(valueHolder, gbc);
 
             gbc.gridx = 2;
             table.add(rate, gbc);
             gbc.gridx = 3;
             table.add(amount, gbc);
-
             gbc.gridx = 4;
-            table.add(edit, gbc);
+            table.add(allDaysLabel, gbc);
+
             gbc.gridx = 5;
+            table.add(edit, gbc);
+            gbc.gridx = 6;
             table.add(delete, gbc);
             gbc.gridy++;
         }
 
-        JScrollPane scrollPane = new JScrollPane(table);
-        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
-        scrollBar.setUnitIncrement(scrollBar.getUnitIncrement() * 8);
-        scrollPane.setPreferredSize(new Dimension(400, 200));
-        scrollPane.setMinimumSize(new Dimension(400, 200));
-        scrollPane.setViewportView(table);
+        JScrollPane scrollPane = scrollTable(table, 600, 200);
         JTextField remarks = new JTextField("Remarks");
-        DatePicker datePicker = new DatePicker("Renting Date");
-        JPanel rentDatePanel = datePicker.getPanel();
-        DatePicker datePicker2 = new DatePicker("Return Date");
-        JPanel returnDatePanel = datePicker2.getPanel();
         JButton submit = new JButton("Submit");
+        submit.addActionListener(e -> {
+            String startDateRaw = datePicker.getDate();
+            String endDateRaw = datePicker2.getDate();
+            Date start;
+            Date end;
+            try {
+                SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
+                start = format.parse(startDateRaw);
+                end = format.parse(endDateRaw);
+            } catch (java.text.ParseException exception) {
+                navigator.close();
+                createReservation(itemsForReservation, finalGstValue, 0, datePicker.getDateRaw(), datePicker2.getDateRaw(), userType);
+                return;
+            }
+            LocalDate date1 = start.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDate date2 = end.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            long daysBetween = ChronoUnit.DAYS.between(date1, date2);
+
+            if(daysBetween < 1) {
+                JOptionPane.showMessageDialog(mainFrame, "Number of Days Can Not be Negative!");
+                return;
+            }
+
+            Reservation reservation = new Reservation(0, customer, itemsForReservation,
+                    remarks.getText(), new Date(), start, end);
+
+            viewReservation(reservation, userType);
+        });
 
         gbc.gridx = 0;
         table.add(subTotal, gbc);
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         table.add(subTotalAmount, gbc);
         gbc.gridy++;
 
@@ -787,13 +866,13 @@ public class PartyRental {
         table.add(gstLabel, gbc);
         gbc.gridx = 2;
         table.add(gstRate, gbc);
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         table.add(gstLabelAmount, gbc);
 
         gbc.gridy++;
         gbc.gridx = 0;
         table.add(total, gbc);
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         table.add(totalAmount, gbc);
 
         GuiPlacer placer = new GuiPlacer(400, 800);
@@ -905,7 +984,6 @@ public class PartyRental {
          */
 
         Customer client = reservation.getCustomer();
-
         JLabel id = new JLabel("ID: " + reservation.getReservationId());
         JLabel clientID = new JLabel("Client ID: " + client.getClientId());
         JLabel clientName = new JLabel("Client Name: " + client.getName());
@@ -963,10 +1041,21 @@ public class PartyRental {
         gbc.gridx = 3;
         table.add(amountHeading, gbc);
 
-        HashMap<Item, Integer> items = reservation.getItems();
-        for(Item item : items.keySet()) {
+        // todo query items from db to this variable
+        HashMap<String, Item> items;
+        try {
+            items = dbToHashMap(false);
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+            return;
+        }
+
+        HashMap<String, Integer> reservationItems = reservation.getItems();
+        for(String description : reservationItems.keySet()) {
 //            Item item = items.get(x);
-            JLabel qty = new JLabel(String.valueOf(items.get(item)));
+            Item item = items.get(description);
+            int quantity = reservationItems.get(description);
+            JLabel qty = new JLabel(String.valueOf(quantity));
             JLabel itemName = new JLabel(item.getDescription());
             JLabel rate = new JLabel(String.valueOf(item.getRate()));
             JLabel amount = new JLabel(String.valueOf(item.getRate()));
@@ -1072,18 +1161,18 @@ public class PartyRental {
 //        fadas.put(thisItem, 2);
 
         ArrayList<Reservation> reservations = new ArrayList<>();
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
+//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
 
         for(int x = 0; x < reservations.size(); x++) {
             Reservation reservation = reservations.get(0);
