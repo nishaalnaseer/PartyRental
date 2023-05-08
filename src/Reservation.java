@@ -1,3 +1,6 @@
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -15,10 +18,12 @@ public class Reservation {
 
     private float subtotal = 0;
     private float gst = 0;
+    private long days;
+    private float paid = 0;
 
     public Reservation(int reservationId, Customer customer, HashMap<String, Integer> items,
                        String remarks, Date reservationDate, Date rentDate,
-                       Date returnDate) {
+                       Date returnDate, float subtotal, float gst) {
         this.reservationId = reservationId;
         this.items = items;
         this.remarks = remarks;
@@ -26,10 +31,12 @@ public class Reservation {
         this.rentDate = rentDate;
         this.returnDate = returnDate;
         this.status = ReservationStatus.valueOf("REQUESTED");
-
-        // TODO query the parameters for the following variable from DB
+        LocalDate date1 = rentDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate date2 = returnDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        this.days = ChronoUnit.DAYS.between(date1, date2);
         this.customer = customer;
-
+        this.subtotal = subtotal;
+        this.gst = gst;
     }
 
     float getTotal() {
@@ -114,5 +121,23 @@ public class Reservation {
 
     void setStatus(String status) {
         this.status = ReservationStatus.valueOf(status);
+    }
+
+    public long getDays() {
+        return days;
+    }
+
+    public void setDays(long days) {
+        this.days = days;
+    }
+
+    public float getSubTotal() {return subtotal;}
+
+    public float getPaid() {
+        return paid;
+    }
+
+    public void setPaid(float paid) {
+        this.paid = paid;
     }
 }

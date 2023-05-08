@@ -619,6 +619,45 @@ public class PartyRental {
         navigator.open(panel, "createAccount");
     }
 
+    private void dateFormatter(HashMap<String, Integer> itemsForReservation, DatePicker datePicker1,
+                               DatePicker datePicker2, Item item, String userType, Integer amount, float finalGstValue) {
+        String startDateRaw = datePicker1.getDate();
+        String endDateRaw = datePicker2.getDate();
+        Date start;
+        Date end;
+        try {
+            SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
+            start = format.parse(startDateRaw);
+            end = format.parse(endDateRaw);
+        } catch (java.text.ParseException exception) {
+            itemsForReservation.put(item.getDescription(), amount);
+            navigator.close();
+            createReservation(itemsForReservation, finalGstValue, 0, datePicker1.getDateRaw(), datePicker2.getDateRaw(), userType);
+            return;
+        }
+        LocalDate date1 = start.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate date2 = end.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        long daysBetween = ChronoUnit.DAYS.between(date1, date2);
+
+        if(daysBetween <= 1) {
+            itemsForReservation.put(item.getDescription(), amount);
+            navigator.close();
+            createReservation(itemsForReservation, finalGstValue, 0, datePicker1.getDateRaw(), datePicker2.getDateRaw(), userType);
+        }
+        itemsForReservation.put(item.getDescription(), amount);
+        navigator.close();
+        createReservation(itemsForReservation, finalGstValue, daysBetween, datePicker1.getDateRaw(), datePicker2.getDateRaw(), userType);
+    }
+
+    private float getGst() throws SQLException {
+        Object[] values = new Object[]{customer.getType()};
+        ResultSet resultSet = valuedQuery(scripts.getGstRate, values);
+        resultSet.next();
+        float gstValue = resultSet.getFloat("tax");
+        resultSet.close();
+        return gstValue;
+    }
+
     private void createReservation(HashMap<String, Integer> itemsForReservation, float gstValue, long days,
                                    Object[] selectedStartDate, Object[] selectedEndDate, String userType
 
@@ -634,11 +673,7 @@ public class PartyRental {
         }
         if(gstValue == 0) {
             try {
-                Object[] values = new Object[]{customer.getType()};
-                ResultSet resultSet = valuedQuery(scripts.getGstRate, values);
-                resultSet.next();
-                gstValue = resultSet.getFloat("tax");
-                resultSet.close();
+                gstValue = getGst();
             } catch (SQLException exception) {
                 JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
                 return;
@@ -719,33 +754,7 @@ public class PartyRental {
                 // do nothing
             }
 
-            String startDateRaw = datePicker.getDate();
-            String endDateRaw = datePicker2.getDate();
-            Date start;
-            Date end;
-            try {
-                SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
-                start = format.parse(startDateRaw);
-                end = format.parse(endDateRaw);
-            } catch (java.text.ParseException exception) {
-                itemsForReservation.put(item.getDescription(), amount);
-                navigator.close();
-                createReservation(itemsForReservation, finalGstValue, 0, datePicker.getDateRaw(), datePicker2.getDateRaw(), userType);
-                return;
-            }
-            LocalDate date1 = start.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            LocalDate date2 = end.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            long daysBetween = ChronoUnit.DAYS.between(date1, date2);
-
-            if(daysBetween <= 1) {
-                itemsForReservation.put(item.getDescription(), amount);
-                navigator.close();
-                createReservation(itemsForReservation, finalGstValue, 0, datePicker.getDateRaw(), datePicker2.getDateRaw(), userType);
-            }
-
-            itemsForReservation.put(item.getDescription(), amount);
-            navigator.close();
-            createReservation(itemsForReservation, finalGstValue, daysBetween, datePicker.getDateRaw(), datePicker2.getDateRaw(), userType);
+            dateFormatter(itemsForReservation, datePicker, datePicker2, item, userType, amount, finalGstValue);
         });
 
         gbc.gridy = 0;
@@ -775,9 +784,7 @@ public class PartyRental {
             JButton edit = new JButton("Edit");
             JButton delete = new JButton("Delete");
             delete.addActionListener(e -> {
-                itemsForReservation.remove(item.getDescription());
-                navigator.close();
-                createReservation(itemsForReservation, finalGstValue, 0, datePicker.getDateRaw(), datePicker2.getDateRaw(), userType);
+                dateFormatter(itemsForReservation, datePicker, datePicker2, item, userType, value, finalGstValue);
             });
             edit.addActionListener(new ActionListener() {
                 String text = "New Amount: ";
@@ -789,10 +796,11 @@ public class PartyRental {
                         if (input != null) {
                             try {
                                 newAmount = Integer.parseInt(input);
-                                itemsForReservation.put(item.getDescription(), newAmount);
+                                dateFormatter(itemsForReservation, datePicker, datePicker2, item, userType, newAmount, finalGstValue);
                                 valueHolder.setText(String.valueOf(newAmount));
-                                navigator.close();
-                                createReservation(itemsForReservation, finalGstValue, 0, datePicker.getDateRaw(), datePicker2.getDateRaw(), userType);
+//                                itemsForReservation.put(item.getDescription(), newAmount);
+//                                navigator.close();
+//                                createReservation(itemsForReservation, finalGstValue, 0, datePicker.getDateRaw(), datePicker2.getDateRaw(), userType);
                                 return;
                             } catch (NumberFormatException ex) {
                                 text = "Invalid!";
@@ -827,6 +835,7 @@ public class PartyRental {
         JScrollPane scrollPane = scrollTable(table, 600, 200);
         JTextField remarks = new JTextField("Remarks");
         JButton submit = new JButton("Submit");
+        float finalSubtotalValue = subtotalValue;
         submit.addActionListener(e -> {
             String startDateRaw = datePicker.getDate();
             String endDateRaw = datePicker2.getDate();
@@ -850,8 +859,10 @@ public class PartyRental {
                 return;
             }
 
+//            float gstAmount = subtotalValue * gstValue / 100;
+//            float totalValue = subtotalValue + gstAmount;
             Reservation reservation = new Reservation(0, customer, itemsForReservation,
-                    remarks.getText(), new Date(), start, end);
+                    remarks.getText(), new Date(), start, end, gstAmount, finalSubtotalValue);
 
             viewReservation(reservation, userType);
         });
@@ -993,10 +1004,27 @@ public class PartyRental {
         JLabel returnDate = new JLabel("Return Date: " + getFDate(reservation.getReturnDate(), "dd-MMM-yy"));
         JLabel status = new JLabel("Status: " + reservation.getStatus());
 
-        Component[] elements = {
-                id, clientID, clientName, status, remarks, reservationDate,
-                rentDate, returnDate
-        };
+        Component[] elements;
+        if(reservation.getReservationId() == 0) {
+            elements = new Component[]{
+                    clientID, clientName, status, remarks, reservationDate,
+                    rentDate, returnDate
+            };
+        } else {
+            elements = new Component[]{
+                    id, clientID, clientName, status, remarks, reservationDate,
+                    rentDate, returnDate
+            };
+        }
+
+        float gstValue;
+        try {
+            gstValue = getGst();
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+            return;
+        }
+
         GuiPlacer placer = new GuiPlacer(400, 500);
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
@@ -1009,20 +1037,21 @@ public class PartyRental {
         JLabel nameHeading = new JLabel("Item");
         JLabel qtyHeading = new JLabel("Qty");
         JLabel rateHeading = new JLabel("Rate");
-        JLabel amountHeading = new JLabel("Amount");
+        JLabel perDay = new JLabel("Per Day");
+        JLabel amount = new JLabel("For " + reservation.getDays() + " Days");
 
         JLabel durationLabel = new JLabel("#days");
-        JLabel duration = new JLabel("%d%M%YYYY");
+        JLabel duration = new JLabel(String.valueOf(reservation.getDays()));
         JLabel subTotal = new JLabel("Subtotal");
         JLabel gstLabel = new JLabel("GST");
-        JLabel subTotalAmount = new JLabel("amount");
-        JLabel gstLabelAmount = new JLabel("amount");
-        JLabel gstRate = new JLabel("gstRate");
+        JLabel subTotalAmount = new JLabel(String.valueOf(reservation.getSubTotal()));
+        JLabel gstLabelAmount = new JLabel(String.valueOf(reservation.getGst()));
+        JLabel gstRate = new JLabel(String.valueOf(gstValue));
         JLabel total = new JLabel("Total");
-        JLabel totalAmount = new JLabel("Total");
+        JLabel totalAmount = new JLabel(String.valueOf(reservation.getTotal()));
 
         JLabel alreadyPaidLabel = new JLabel("Initially Paid");
-        JLabel alreadyPaidAmount = new JLabel(String.valueOf(reservation.getTotal()));
+        JLabel alreadyPaidAmount = new JLabel(String.valueOf(reservation.getPaid()));
 
         JScrollPane scrollPane = new JScrollPane(table);
         JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
@@ -1039,9 +1068,10 @@ public class PartyRental {
         gbc.gridx = 2;
         table.add(rateHeading, gbc);
         gbc.gridx = 3;
-        table.add(amountHeading, gbc);
+        table.add(perDay, gbc);
+        gbc.gridx = 4;
+        table.add(amount, gbc);
 
-        // todo query items from db to this variable
         HashMap<String, Item> items;
         try {
             items = dbToHashMap(false);
@@ -1058,7 +1088,7 @@ public class PartyRental {
             JLabel qty = new JLabel(String.valueOf(quantity));
             JLabel itemName = new JLabel(item.getDescription());
             JLabel rate = new JLabel(String.valueOf(item.getRate()));
-            JLabel amount = new JLabel(String.valueOf(item.getRate()));
+            JLabel perDayAmount = new JLabel(String.valueOf(item.getRate()*quantity));
             gbc.gridy++;
 
             gbc.gridx = 0;
@@ -1068,7 +1098,7 @@ public class PartyRental {
             gbc.gridx = 2;
             table.add(rate, gbc);
             gbc.gridx = 3;
-            table.add(amount, gbc);
+            table.add(perDayAmount, gbc);
         }
 
         elements = new Component[]{scrollPane};
