@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 // csv parser
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.apache.commons.csv.CSVFormat;
@@ -784,6 +785,7 @@ public class PartyRental {
             JButton edit = new JButton("Edit");
             JButton delete = new JButton("Delete");
             delete.addActionListener(e -> {
+                itemsForReservation.remove(description);
                 dateFormatter(itemsForReservation, datePicker, datePicker2, item, userType, value, finalGstValue);
             });
             edit.addActionListener(new ActionListener() {
@@ -864,7 +866,7 @@ public class PartyRental {
             Reservation reservation = new Reservation(0, customer, itemsForReservation,
                     remarks.getText(), new Date(), start, end, gstAmount, finalSubtotalValue);
 
-            viewReservation(reservation, userType);
+            viewReservation(reservation, userType, "make");
         });
 
         gbc.gridx = 0;
@@ -962,7 +964,7 @@ public class PartyRental {
                 navigator.close();
                 viewReservations(userType);
             });
-            view.addActionListener(e -> viewReservation(reservation, userType));
+            view.addActionListener(e -> viewReservation(reservation, userType, "made"));
             for(int x = 0; x < elements.length; x++) {
                 gbc.gridx = x;
                 table.add(elements[x], gbc);
@@ -989,7 +991,132 @@ public class PartyRental {
         displayReservation(reservations, "viewReservations", userType);
     }
 
-    private void viewReservation(Reservation reservation, String userType) {
+    private void makePayment(Reservation reservation, float amount) {
+        JPanel panel = new JPanel(new GridBagLayout());
+
+        JTextField name = new JTextField("Name on Card: ");
+        JTextField expMM = new JTextField("Expiry Month(MM): ");
+        JTextField expYY = new JTextField("Expiry Year(YY): ");
+        JTextField sec = new JTextField("Security Code: ");
+        JButton submit = new JButton("Make Transaction");
+        JTextField[] fields = new JTextField[]{
+                name, expMM, expYY, sec
+        };
+        clearManyTexts(fields);
+
+        submit.addActionListener(e -> {
+            int month, year;
+            try {
+                month = Integer.parseInt(expMM.getText());
+                year = Integer.parseInt(expYY.getText());
+            } catch (NumberFormatException exception) {
+                JOptionPane.showMessageDialog(mainFrame, "Invalid Expiry Date");
+                return;
+            }
+
+            String cardName = name.getText();
+            if(cardName.isBlank() || cardName.equals("Name on Card: ")) {
+                JOptionPane.showMessageDialog(mainFrame, "Invalid Name!");
+                return;
+            }
+
+            int secCode;
+            try {
+                secCode = Integer.parseInt(sec.getText());
+            } catch (NumberFormatException exception) {
+                JOptionPane.showMessageDialog(mainFrame, "Invalid Security Code");
+                return;
+            }
+
+            SimpleDateFormat format = new SimpleDateFormat("MM/yy");
+            try {
+                Date date = format.parse(month + "/" + year);
+            } catch (ParseException exception) {
+                JOptionPane.showMessageDialog(mainFrame, "Success!");
+                return;
+            }
+
+            // transaction details to db
+            Object[] values = new Object[]{
+                    amount, reservation.getReservationId(), month, year, secCode, cardName
+            };
+
+            try {
+                ResultSet resultSet = valuedQuery(scripts.insertTransaction, values);
+                resultSet.close();
+                JOptionPane.showMessageDialog(mainFrame, "Success!");
+            } catch (SQLException exception) {
+                JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
+                return;
+            }
+
+
+            // reservation details to db
+            values = new Object[]{
+                    reservation.getCustomer().getClientId(),
+                    reservation.getRemarks(),
+                    dateToDB(reservation.getReservationDate()),
+                    dateToDB(reservation.getRentDate()),
+                    dateToDB(reservation.getReturnDate())
+            };
+
+            try {
+                ResultSet resultSet = valuedQuery(scripts.insertReservation, values);
+                resultSet.close();
+                JOptionPane.showMessageDialog(mainFrame, "Success!");
+            } catch (SQLException exception) {
+                JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
+                return;
+            }
+
+            // reservation items details to db
+            HashMap<String, Integer> reservationItems = reservation.getItems();
+            try {
+                HashMap<String, Item> items = dbToHashMap(false);
+            } catch (SQLException exception) {
+                JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
+            }
+            for(String description : reservationItems.keySet()) {
+                Integer quantity = reservationItems.get(description);
+                Item item = items.get(description);
+                values = new Object[]{
+                        reservation.getReservationId(),
+                        item.getId(), quantity
+                };
+
+                try {
+                    ResultSet resultSet = valuedQuery(scripts.insertReservationItem, values);
+                    resultSet.close();
+                    JOptionPane.showMessageDialog(mainFrame, "Success!");
+                } catch (SQLException exception) {
+                    JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
+                    return;
+                }
+            }
+
+            JOptionPane.showMessageDialog(mainFrame, "Success!");
+            navigator.close();
+            navigator.close();
+            navigator.close();
+            viewReservations("customer");
+        });
+
+        GuiPlacer guiPlacer = new GuiPlacer(400, 500);
+        JComponent[] elements = new JComponent[]{
+                name, getPadding(400, 5),
+                expMM, getPadding(400, 5),
+                expYY, getPadding(400, 5),
+                sec, getPadding(400, 5),
+                submit, getPadding(400, 5),
+                back
+        };
+        guiPlacer.verticalPlacer(elements);
+        JPanel container = guiPlacer.getContainer();
+        panel.add(container);
+        navigator.open(panel, "makePayment");
+    }
+
+    private void viewReservation(Reservation reservation, String userType, String info) {
         /*
         function to view a single reservation
          */
@@ -1089,6 +1216,7 @@ public class PartyRental {
             JLabel itemName = new JLabel(item.getDescription());
             JLabel rate = new JLabel(String.valueOf(item.getRate()));
             JLabel perDayAmount = new JLabel(String.valueOf(item.getRate()*quantity));
+            JLabel allDaysAmount = new JLabel(String.valueOf(item.getRate()*quantity*reservation.getDays()));
             gbc.gridy++;
 
             gbc.gridx = 0;
@@ -1099,6 +1227,8 @@ public class PartyRental {
             table.add(rate, gbc);
             gbc.gridx = 3;
             table.add(perDayAmount, gbc);
+            gbc.gridx = 4;
+            table.add(allDaysAmount, gbc);
         }
 
         elements = new Component[]{scrollPane};
@@ -1115,13 +1245,21 @@ public class PartyRental {
         placer2.vhPlacer(mDElements);
         JPanel container2 = placer2.getContainer();
 
-        JButton delete = new JButton("Delete");
-        delete.addActionListener(e -> {
-            // todo delete item from DB
-            navigator.close();
-            navigator.close();
-            viewReservations(userType);
-        });
+        JButton deleteApprove;
+        if(info.equals("make")) {
+            deleteApprove = new JButton("Submit");
+            deleteApprove.addActionListener(e -> {
+                makePayment(reservation, reservation.getTotal()/2);
+            });
+        } else {
+            deleteApprove = new JButton("Delete");
+            deleteApprove.addActionListener(e -> {
+                // todo delete reservation from DB
+                navigator.close();
+                navigator.close();
+                viewReservations(userType);
+            });
+        }
 
         GuiPlacer main = new GuiPlacer(400, 500);
         Component[] mainElements;
@@ -1130,7 +1268,7 @@ public class PartyRental {
                     container, getPadding(5, 5),
                     scrollPane, getPadding(5, 5),
                     container2, getPadding(5, 5),
-                    delete, getPadding(5, 5),
+                    deleteApprove, getPadding(5, 5),
                     back, getPadding(5, 5)
             };
             case "officerRent" -> {
@@ -1140,7 +1278,7 @@ public class PartyRental {
                         scrollPane, getPadding(5, 5),
                         container2, getPadding(5, 5),
                         rentOrder, getPadding(5, 5),
-                        delete, getPadding(5, 5),
+                        deleteApprove, getPadding(5, 5),
                         back, getPadding(5, 5),
                 };
             }
@@ -1151,7 +1289,7 @@ public class PartyRental {
                         scrollPane, getPadding(5, 5),
                         container2, getPadding(5, 5),
                         approve, getPadding(5, 5),
-                        delete, getPadding(5, 5),
+                        deleteApprove, getPadding(5, 5),
                         back, getPadding(5, 5),
                 };
             }
@@ -1162,7 +1300,7 @@ public class PartyRental {
                         scrollPane, getPadding(5, 5),
                         container2, getPadding(5, 5),
                         recordReturn, getPadding(5, 5),
-                        delete, getPadding(5, 5),
+                        deleteApprove, getPadding(5, 5),
                         back, getPadding(5, 5),
                 };
             }

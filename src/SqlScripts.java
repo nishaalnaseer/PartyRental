@@ -90,4 +90,16 @@ public class SqlScripts {
 
     final String getGstRate =
             "SELECT tax FROM customer_type WHERE label = ?";
+
+    final String insertReservation =
+            "INSERT INTO reservation (customer, remarks, reservation_date, " +
+                    "rent_date, return_date) VALUES (?, ?, ?, ?, ?)";
+
+    final String insertTransaction =
+            "INSERT INTO transaction(amount, reservation_id, card_mm, " +
+                    "card_yy, card_sec, card_name) VALUES " +
+                    "(?, ?, ?, ?, ?, ?)";
+
+    final String insertReservationItem =
+            "INSERT INTO items (reservation_id, item_id, qty) VALUES (?, ?, ?)";
 }

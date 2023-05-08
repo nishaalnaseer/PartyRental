@@ -20,10 +20,13 @@ public class Reservation {
     private float gst = 0;
     private long days;
     private float paid = 0;
+    private int approvedBy;
+    private int rentedBy;
+    private int returnAcceptedBy;
 
     public Reservation(int reservationId, Customer customer, HashMap<String, Integer> items,
                        String remarks, Date reservationDate, Date rentDate,
-                       Date returnDate, float subtotal, float gst) {
+                       Date returnDate, float gst, float subtotal) {
         this.reservationId = reservationId;
         this.items = items;
         this.remarks = remarks;
@@ -139,5 +142,26 @@ public class Reservation {
 
     public void setPaid(float paid) {
         this.paid = paid;
+    }
+
+    public int getApprovedBy() {
+        return approvedBy;
+    }
+
+    public int getRentedBy() {
+        return approvedBy;
+    }
+    public int getReturnAcceptedBy() {
+        return returnAcceptedBy;
+    }
+
+    public void setApprovedBy(int id) {
+        approvedBy = id;
+    }
+    public void setRentedBy(int id) {
+        rentedBy = id;
+    }
+    public void setReturnAcceptedBy(int id) {
+        returnAcceptedBy = id;
     }
 }

@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `customer` (
   UNIQUE KEY `email` (`email`) USING BTREE,
   KEY `FK_customer_customer_type` (`type`),
   CONSTRAINT `FK_customer_customer_type` FOREIGN KEY (`type`) REFERENCES `customer_type` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
 
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS `item` (
   UNIQUE KEY `description` (`description`),
   UNIQUE KEY `id` (`id`) USING BTREE,
   KEY `FK_item_employee` (`created_by`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
 
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS `items` (
   UNIQUE KEY `unique_reservations_items` (`reservation_id`,`item_id`),
   KEY `FK_items_item` (`item_id`),
   CONSTRAINT `FK_items_item` FOREIGN KEY (`item_id`) REFERENCES `item` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `FK_items_reservation` FOREIGN KEY (`reservation_id`) REFERENCES `reservation` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `FK_items_reservation` FOREIGN KEY (`reservation_id`) REFERENCES `reservation` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
@@ -111,18 +111,19 @@ CREATE TABLE IF NOT EXISTS `requested_customer` (
   UNIQUE KEY `email` (`email`),
   KEY `FK_requested_customer_customer_type` (`type`),
   CONSTRAINT `FK_requested_customer_customer_type` FOREIGN KEY (`type`) REFERENCES `customer_type` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
 
 -- Dumping structure for table party_rental.reservation
 CREATE TABLE IF NOT EXISTS `reservation` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `customer` int(11) NOT NULL,
   `remarks` varchar(150) NOT NULL DEFAULT '',
-  `approved_by` int(11) DEFAULT NULL,
-  `rented_by` int(11) DEFAULT NULL,
-  `return_accepted_by` int(11) DEFAULT NULL,
+  `approved_by` int(11) DEFAULT NULL COMMENT 'employee who appoved resrevation',
+  `rented_by` int(11) DEFAULT NULL COMMENT 'employee who rented out',
+  `return_accepted_by` int(11) DEFAULT NULL COMMENT 'employee who accepted returns',
+  `paid` float NOT NULL DEFAULT 0,
   `reservation_date` date NOT NULL,
   `rent_date` date NOT NULL,
   `return_date` date NOT NULL,
@@ -137,6 +138,24 @@ CREATE TABLE IF NOT EXISTS `reservation` (
   CONSTRAINT `FK_reservation_customer` FOREIGN KEY (`customer`) REFERENCES `customer` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `FK_reservation_rented_by` FOREIGN KEY (`rented_by`) REFERENCES `employee` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `FK_reservation_return_accepted_by` FOREIGN KEY (`return_accepted_by`) REFERENCES `employee` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Data exporting was unselected.
+
+-- Dumping structure for table party_rental.transactions
+CREATE TABLE IF NOT EXISTS `transactions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `amount` float NOT NULL,
+  `reservation_id` int(11) NOT NULL,
+  `card_mm` int(11) NOT NULL,
+  `card_yy` int(11) NOT NULL,
+  `card_sec` int(11) NOT NULL,
+  `card_name` int(11) NOT NULL,
+  `date` date NOT NULL DEFAULT curdate(),
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `id` (`id`) USING BTREE,
+  KEY `FK_transactions_reservation` (`reservation_id`) USING BTREE,
+  CONSTRAINT `FK_transactions_reservation` FOREIGN KEY (`reservation_id`) REFERENCES `reservation` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
