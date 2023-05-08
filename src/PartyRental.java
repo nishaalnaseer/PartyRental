@@ -663,6 +663,8 @@ public class PartyRental {
                                    Object[] selectedStartDate, Object[] selectedEndDate, String userType
 
     ) {
+        // todo make delete button work
+        // todo make sure rent date is not past today
         JPanel panel = new JPanel(new GridBagLayout());
         HashMap<String, Item> items;
 
@@ -984,15 +986,36 @@ public class PartyRental {
         navigator.open(panel, panelDesc);
     }
 
+    ArrayList<Reservation> getReservations(String script, Object[] values) throws SQLException {
+        ResultSet resultSet = valuedQuery(script, values);
+        ArrayList reservations;
+        while (resultSet.next()) {
+            int id = resultSet.getInt("id");
+            int clientID = resultSet.getInt("customer");
+            String remarks = resultSet.getString("remarks");
+            int approvedBy = resultSet.getInt("approved_by");
+            int rentedBy = resultSet.getInt("rented_by");
+            int returnBy = resultSet.getInt("return_accepted_by");
+            float paid = resultSet.getFloat("paid");
+            Date reservationDate = resultSet.getDate("reservation_date");
+            Date rentDate = resultSet.getDate("rent_date");
+            Date returnDate = resultSet.getDate("return_date");
+        }
+        return reservations;
+    }
+
     private void viewReservations(String userType) {
         /*
         function to view all of user's reservations
          */
+
+        ArrayList<Reservation> reservations;
         displayReservation(reservations, "viewReservations", userType);
     }
 
     private void makePayment(Reservation reservation, float amount) {
         JPanel panel = new JPanel(new GridBagLayout());
+        // todo check if card expired?
 
         JTextField name = new JTextField("Name on Card: ");
         JTextField expMM = new JTextField("Expiry Month(MM): ");
@@ -1036,20 +1059,7 @@ public class PartyRental {
                 return;
             }
 
-            // transaction details to db
-            Object[] values = new Object[]{
-                    amount, reservation.getReservationId(), month, year, secCode, cardName
-            };
-
-            try {
-                ResultSet resultSet = valuedQuery(scripts.insertTransaction, values);
-                resultSet.close();
-                JOptionPane.showMessageDialog(mainFrame, "Success!");
-            } catch (SQLException exception) {
-                JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
-                return;
-            }
-
+            Object[] values;
 
             // reservation details to db
             values = new Object[]{
@@ -1063,7 +1073,18 @@ public class PartyRental {
             try {
                 ResultSet resultSet = valuedQuery(scripts.insertReservation, values);
                 resultSet.close();
-                JOptionPane.showMessageDialog(mainFrame, "Success!");
+            } catch (SQLException exception) {
+                JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
+                return;
+            }
+
+            // reservation entry just got inserted lets query the id now
+            int reservationID;
+            try {
+                values = new Object[] {customer.getClientId()};
+                ResultSet resultSet = valuedQuery(scripts.selectReservationID, values);
+                resultSet.next();
+                reservationID = resultSet.getInt("id");
             } catch (SQLException exception) {
                 JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
                 return;
@@ -1071,27 +1092,40 @@ public class PartyRental {
 
             // reservation items details to db
             HashMap<String, Integer> reservationItems = reservation.getItems();
+            HashMap<String, Item> items;
             try {
-                HashMap<String, Item> items = dbToHashMap(false);
+                items = dbToHashMap(false);
             } catch (SQLException exception) {
                 JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
+                return;
             }
             for(String description : reservationItems.keySet()) {
                 Integer quantity = reservationItems.get(description);
                 Item item = items.get(description);
                 values = new Object[]{
-                        reservation.getReservationId(),
-                        item.getId(), quantity
+                        reservationID, item.getId(), quantity
                 };
 
                 try {
                     ResultSet resultSet = valuedQuery(scripts.insertReservationItem, values);
                     resultSet.close();
-                    JOptionPane.showMessageDialog(mainFrame, "Success!");
                 } catch (SQLException exception) {
                     JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
                     return;
                 }
+            }
+
+            // transaction details to db
+            values = new Object[]{
+                    amount, reservationID, month, year, secCode, cardName
+            };
+
+            try {
+                ResultSet resultSet = valuedQuery(scripts.insertTransaction, values);
+                resultSet.close();
+            } catch (SQLException exception) {
+                JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
+                return;
             }
 
             JOptionPane.showMessageDialog(mainFrame, "Success!");

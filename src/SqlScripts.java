@@ -102,4 +102,7 @@ public class SqlScripts {
 
     final String insertReservationItem =
             "INSERT INTO items (reservation_id, item_id, qty) VALUES (?, ?, ?)";
+
+    final String selectReservationID =
+            "SELECT id FROM reservation WHERE customer = ? ORDER BY id DESC LIMIT 1";
 }
