@@ -93,7 +93,8 @@ public class SqlScripts {
 
     final String insertReservation =
             "INSERT INTO reservation (customer, remarks, reservation_date, " +
-                    "rent_date, return_date) VALUES (?, ?, ?, ?, ?)";
+                    "rent_date, return_date, gst, subtotal)" +
+                    " VALUES (?, ?, ?, ?, ?, ?, ?)";
 
     final String insertTransaction =
             "INSERT INTO transaction(amount, reservation_id, card_mm, " +
@@ -105,4 +106,18 @@ public class SqlScripts {
 
     final String selectReservationID =
             "SELECT id FROM reservation WHERE customer = ? ORDER BY id DESC LIMIT 1";
+
+    final String selectClient =
+            "SELECT * FROM customer JOIN customer_type ON " +
+            "customer.type = customer_type.id WHERE customer.id = ?";
+
+    final String selectReservationItems =
+            "SELECT * FROM items JOIN item on items.item_id = " +
+            "item.id WHERE reservation_id = ?";
+
+    final String selectClientReservations =
+            "SELECT * FROM reservation WHERE customer = ?";
+
+    final String selectReservationsOnStatus =
+            "SELECT * FROM reservation WHERE status = ?";
 }

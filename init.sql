@@ -87,14 +87,13 @@ CREATE TABLE IF NOT EXISTS `items` (
   `reservation_id` int(11) NOT NULL,
   `item_id` int(11) NOT NULL,
   `qty` int(11) NOT NULL,
-  `price` float NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `unique_reservations_items` (`reservation_id`,`item_id`),
   KEY `FK_items_item` (`item_id`),
   CONSTRAINT `FK_items_item` FOREIGN KEY (`item_id`) REFERENCES `item` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `FK_items_reservation` FOREIGN KEY (`reservation_id`) REFERENCES `reservation` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
 
@@ -123,6 +122,8 @@ CREATE TABLE IF NOT EXISTS `reservation` (
   `approved_by` int(11) DEFAULT NULL COMMENT 'employee who appoved resrevation',
   `rented_by` int(11) DEFAULT NULL COMMENT 'employee who rented out',
   `return_accepted_by` int(11) DEFAULT NULL COMMENT 'employee who accepted returns',
+  `gst` float NOT NULL,
+  `subtotal` float NOT NULL,
   `paid` float NOT NULL DEFAULT 0,
   `reservation_date` date NOT NULL,
   `rent_date` date NOT NULL,
@@ -142,21 +143,21 @@ CREATE TABLE IF NOT EXISTS `reservation` (
 
 -- Data exporting was unselected.
 
--- Dumping structure for table party_rental.transactions
-CREATE TABLE IF NOT EXISTS `transactions` (
+-- Dumping structure for table party_rental.transaction
+CREATE TABLE IF NOT EXISTS `transaction` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `amount` float NOT NULL,
   `reservation_id` int(11) NOT NULL,
   `card_mm` int(11) NOT NULL,
   `card_yy` int(11) NOT NULL,
   `card_sec` int(11) NOT NULL,
-  `card_name` int(11) NOT NULL,
+  `card_name` varchar(75) NOT NULL DEFAULT '',
   `date` date NOT NULL DEFAULT curdate(),
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `id` (`id`) USING BTREE,
   KEY `FK_transactions_reservation` (`reservation_id`) USING BTREE,
   CONSTRAINT `FK_transactions_reservation` FOREIGN KEY (`reservation_id`) REFERENCES `reservation` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
 

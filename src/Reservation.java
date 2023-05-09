@@ -1,3 +1,4 @@
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -36,6 +37,7 @@ public class Reservation {
         this.status = ReservationStatus.valueOf("REQUESTED");
         LocalDate date1 = rentDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate date2 = returnDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+//                           start    .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         this.days = ChronoUnit.DAYS.between(date1, date2);
         this.customer = customer;
         this.subtotal = subtotal;

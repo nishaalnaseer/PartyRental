@@ -143,7 +143,7 @@ public class PartyRental {
             try {
                 Object[] values = new Object[]{username, password, "ENABLED"};
                 ResultSet rs = valuedQuery(scripts.loginClient, values);
-                while (rs.next()) {
+                if (rs.next()) {
                     int id = rs.getInt("id");
                     String name = rs.getString("name");
                     String userPassword = rs.getString("password");
@@ -154,6 +154,7 @@ public class PartyRental {
                     customer = new Customer(id, name, userPassword, userEmail, type, status);
                     customerPage();
                     rs.close();
+                    return;
                 }
             } catch (SQLException exception) {
                 JOptionPane.showMessageDialog(mainFrame, "SQL Error!");
@@ -184,10 +185,11 @@ public class PartyRental {
                 }
             } catch (SQLException exception) {
                 JOptionPane.showMessageDialog(mainFrame, "SQL Error!");
+                return;
             }
+            JOptionPane.showMessageDialog(mainFrame, "Invalid Credentials!");
         });
         clearPasswordTextFields(usernameField, passwordField);
-
 
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {
@@ -372,15 +374,13 @@ public class PartyRental {
         JButton registrations = new JButton("Approve Registrations");
         JButton returnOrder = new JButton("Renturn Order");
         JButton rentOrder = new JButton("Rent Order");
-        JLabel padding1 = getPadding(400, 5);
-        JLabel padding2 = getPadding(400, 5);
-        JLabel padding3 = getPadding(400, 5);
-        JLabel padding4 = getPadding(400, 5);
-
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {
-                registrations, padding2, viewReservationButton, padding3, rentOrder,
-                padding4, returnOrder, getPadding(5, 5), logout
+                registrations, getPadding(5, 5),
+                viewReservationButton, getPadding(5, 5),
+                rentOrder, getPadding(5, 5),
+                returnOrder, getPadding(5, 5),
+                logout
         };
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
@@ -389,7 +389,9 @@ public class PartyRental {
         Object[] selectedStartDate = new String[]{"Select Day", "Select Month", "Select Year"};
         Object[] selectedEndDate = new String[]{"Select Day", "Select Month", "Select Year"};
         makeReservationButton.addActionListener(e -> createReservation(itemsForReservation, 0, 0, selectedStartDate, selectedEndDate, "officer"));
-        viewReservationButton.addActionListener(e -> viewReservations("officer"));
+        viewReservationButton.addActionListener(e -> {
+            viewReservations("officer");
+        });
         registrations.addActionListener(e -> approveRegistration());
         rentOrder.addActionListener(e -> recordRentOrder());
         returnOrder.addActionListener(e -> recordReturnOrder());
@@ -610,11 +612,17 @@ public class PartyRental {
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
 
-        HashMap<String, Integer> itemsForReservation = new HashMap<>();
-        String[] selectedStartDate = new String[]{"Select Day", "Select Month", "Select Year"};
-        String[] selectedEndDate = new String[]{"Select Day", "Select Month", "Select Year"};
-        makeReservationButton.addActionListener(e -> createReservation(itemsForReservation, 0, 0, selectedStartDate, selectedEndDate, "customer"));
-        viewReservationButton.addActionListener(e -> viewReservations("customer"));
+
+        makeReservationButton.addActionListener(e -> {
+            HashMap<String, Integer> itemsForReservation = new HashMap<>();
+            String[] selectedStartDate = new String[]{"Select Day", "Select Month", "Select Year"};
+            String[] selectedEndDate = new String[]{"Select Day", "Select Month", "Select Year"};
+            createReservation(itemsForReservation, 0, 0,
+                    selectedStartDate, selectedEndDate, "customer");
+        });
+        viewReservationButton.addActionListener(e -> {
+            viewReservations("customer");
+        });
 
         panel.add(container);
         navigator.open(panel, "createAccount");
@@ -961,9 +969,10 @@ public class PartyRental {
 
             int finalY = y;
             delete.addActionListener(e -> {
-                // TODO delete reservation from db
+                // TODO update reservation from db
                 reservations.remove(finalY);
                 navigator.close();
+
                 viewReservations(userType);
             });
             view.addActionListener(e -> viewReservation(reservation, userType, "made"));
@@ -986,21 +995,85 @@ public class PartyRental {
         navigator.open(panel, panelDesc);
     }
 
+    private Customer makeCustomer(ResultSet resultSet) throws SQLException {
+        int id = resultSet.getInt("id");
+        String name = resultSet.getString("name");
+        String password = resultSet.getString("password");
+        String email = resultSet.getString("email");
+        String status = resultSet.getString("status");
+        String type = resultSet.getString("label");
+
+        return new Customer(id, name, password, email, type, status);
+    }
+
     ArrayList<Reservation> getReservations(String script, Object[] values) throws SQLException {
+
         ResultSet resultSet = valuedQuery(script, values);
-        ArrayList reservations;
+        ArrayList<Reservation> reservations = new ArrayList<>();
         while (resultSet.next()) {
             int id = resultSet.getInt("id");
             int clientID = resultSet.getInt("customer");
             String remarks = resultSet.getString("remarks");
-            int approvedBy = resultSet.getInt("approved_by");
-            int rentedBy = resultSet.getInt("rented_by");
-            int returnBy = resultSet.getInt("return_accepted_by");
             float paid = resultSet.getFloat("paid");
             Date reservationDate = resultSet.getDate("reservation_date");
             Date rentDate = resultSet.getDate("rent_date");
             Date returnDate = resultSet.getDate("return_date");
+            String status = resultSet.getString("status");
+            float gst = resultSet.getFloat("gst");
+            float subtotal = resultSet.getFloat("subtotal");
+
+            String rentDateString = getFDate(rentDate, "dd-MM-yyyy");
+            String returnDateString = getFDate(returnDate, "dd-MM-yyyy");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            try {
+                rentDate = dateFormat.parse(rentDateString);
+            } catch (ParseException e) {
+                break;
+            }
+            try {
+                returnDate = dateFormat.parse(returnDateString);
+            } catch (ParseException e) {
+                break;
+            }
+
+            Object[] customerValues = new Object[] {clientID};
+            ResultSet customerSet = valuedQuery(scripts.selectClient, customerValues);
+            customerSet.next();
+            Customer customer = makeCustomer(customerSet);
+            customerSet.close();
+
+            HashMap<String, Integer> reservationItems = new HashMap<>();
+            Object[] itemValues = new Object[] {id};
+            ResultSet itemSet = valuedQuery(scripts.selectReservationItems, itemValues);
+            while (itemSet.next()) {
+                String description = itemSet.getString("description");
+                int quantity = itemSet.getInt("qty");
+                reservationItems.put(description, quantity);
+            }
+
+            Reservation reservation = new Reservation(
+                    id, customer, reservationItems, remarks, reservationDate,
+                    rentDate, returnDate, gst, subtotal
+            );
+            reservation.setStatus(status);
+            reservation.setPaid(paid);
+
+            int approvedBy = resultSet.getInt("approved_by");
+            if (resultSet.wasNull()) {
+                reservation.setApprovedBy(approvedBy);
+            }
+            int rentedBy = resultSet.getInt("rented_by");
+            if (resultSet.wasNull()) {
+                reservation.setRentedBy(rentedBy);
+            }
+            int returnBy = resultSet.getInt("return_accepted_by");
+            if (resultSet.wasNull()) {
+                reservation.setReturnAcceptedBy(returnBy);
+            }
+
+            reservations.add(reservation);
         }
+        resultSet.close();
         return reservations;
     }
 
@@ -1010,6 +1083,17 @@ public class PartyRental {
          */
 
         ArrayList<Reservation> reservations;
+        try {
+            if(userType.equals("customer")) {
+                reservations = getReservations(scripts.selectClientReservations, new Object[]{customer.getClientId()});
+            } else {
+                reservations = getReservations(scripts.selectReservationsOnStatus, new Object[]{"REQUESTED"});
+            }
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+            return;
+        }
+
         displayReservation(reservations, "viewReservations", userType);
     }
 
@@ -1067,7 +1151,9 @@ public class PartyRental {
                     reservation.getRemarks(),
                     dateToDB(reservation.getReservationDate()),
                     dateToDB(reservation.getRentDate()),
-                    dateToDB(reservation.getReturnDate())
+                    dateToDB(reservation.getReturnDate()),
+                    reservation.getGst(),
+                    reservation.getSubTotal()
             };
 
             try {
