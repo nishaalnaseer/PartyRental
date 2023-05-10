@@ -116,8 +116,17 @@ public class SqlScripts {
             "item.id WHERE reservation_id = ?";
 
     final String selectClientReservations =
-            "SELECT * FROM reservation WHERE customer = ?";
+            "SELECT * FROM reservation WHERE customer = ? AND status = 'REQUESTED'";
 
     final String selectReservationsOnStatus =
             "SELECT * FROM reservation WHERE status = ?";
+
+    final String denyReservation =
+            "UPDATE reservation SET status = 'DENIED' WHERE id = ?";
+
+    final String cancelReservation =
+            "UPDATE reservation SET status = 'RESERVATION_CANCELLED' WHERE id = ?";
+
+    final String approveReservation =
+            "UPDATE reservation SET status = 'RESERVED' WHERE id = ?";
 }

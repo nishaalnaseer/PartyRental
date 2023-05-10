@@ -435,7 +435,7 @@ public class PartyRental {
             reservation.setStatus("RESERVED");
         }
 
-        displayReservation(reservations, "recordRent", "officerRent");
+        displayReservations(reservations, "recordRent", "officerRent");
     }
 
     private void approveRegistration() {
@@ -652,6 +652,7 @@ public class PartyRental {
             itemsForReservation.put(item.getDescription(), amount);
             navigator.close();
             createReservation(itemsForReservation, finalGstValue, 0, datePicker1.getDateRaw(), datePicker2.getDateRaw(), userType);
+            return;
         }
         itemsForReservation.put(item.getDescription(), amount);
         navigator.close();
@@ -671,8 +672,6 @@ public class PartyRental {
                                    Object[] selectedStartDate, Object[] selectedEndDate, String userType
 
     ) {
-        // todo make delete button work
-        // todo make sure rent date is not past today
         JPanel panel = new JPanel(new GridBagLayout());
         HashMap<String, Item> items;
 
@@ -755,9 +754,7 @@ public class PartyRental {
             int prevQty;
             try {
                 prevQty = itemsForReservation.get(item.getDescription());
-                if((amount += prevQty) > 0) {
-                    amount += prevQty;
-                } else {
+                if((amount += prevQty) < 0) {
                     JOptionPane.showMessageDialog(mainFrame, "Total Quantity Cant Be Below Zero");
                     return;
                 }
@@ -784,6 +781,11 @@ public class PartyRental {
         for(String description : itemsForReservation.keySet()) {
             Item item = items.get(description);
             Integer value = itemsForReservation.get(description);
+
+            if (value<1){
+                continue;
+            }
+
             float amountValue = value * item.getRate();
 
             JLabel name =  new JLabel(item.getDescription());
@@ -793,11 +795,6 @@ public class PartyRental {
             JLabel allDaysLabel = new JLabel(String.valueOf(value*days*item.getRate()));
 
             JButton edit = new JButton("Edit");
-            JButton delete = new JButton("Delete");
-            delete.addActionListener(e -> {
-                itemsForReservation.remove(description);
-                dateFormatter(itemsForReservation, datePicker, datePicker2, item, userType, value, finalGstValue);
-            });
             edit.addActionListener(new ActionListener() {
                 String text = "New Amount: ";
                 @Override
@@ -839,8 +836,6 @@ public class PartyRental {
 
             gbc.gridx = 5;
             table.add(edit, gbc);
-            gbc.gridx = 6;
-            table.add(delete, gbc);
             gbc.gridy++;
         }
 
@@ -866,13 +861,19 @@ public class PartyRental {
             LocalDate date2 = end.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             long daysBetween = ChronoUnit.DAYS.between(date1, date2);
 
-            if(daysBetween < 1) {
-                JOptionPane.showMessageDialog(mainFrame, "Number of Days Can Not be Negative!");
+            LocalDate today = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            long daysAhead = ChronoUnit.DAYS.between(today, date1);
+
+            if(daysAhead < 2) {
+                JOptionPane.showMessageDialog(mainFrame, "Reservation needs to be done 2 before renting!");
                 return;
             }
 
-//            float gstAmount = subtotalValue * gstValue / 100;
-//            float totalValue = subtotalValue + gstAmount;
+            if(daysBetween < 1) {
+                JOptionPane.showMessageDialog(mainFrame, "Rent Duration Can Not be Negative!");
+                return;
+            }
+
             Reservation reservation = new Reservation(0, customer, itemsForReservation,
                     remarks.getText(), new Date(), start, end, gstAmount, finalSubtotalValue);
 
@@ -915,7 +916,19 @@ public class PartyRental {
         navigator.open(panel, "makeReservation");
     }
 
-    private void displayReservation(ArrayList<Reservation> reservations, String panelDesc, String userType) {
+    private void deletingReservation(Reservation reservation, String userType) throws SQLException {
+        String script;
+        if (userType.equals("customer")) {
+            script = scripts.cancelReservation;
+        } else {
+            script = scripts.denyReservation;
+        }
+
+        ResultSet resultSet = valuedQuery(script, new Object[]{reservation.getReservationId()});
+        resultSet.close();
+    }
+
+    private void displayReservations(ArrayList<Reservation> reservations, String panelDesc, String userType) {
         /*
         function to view all of user's reservations
          */
@@ -959,7 +972,7 @@ public class PartyRental {
             JLabel remarks = new JLabel(reservation.getRemarks());
             JLabel reservationDate = new JLabel(getFDate(reservation.getReservationDate(), "dd-MMM-yy"));
             JLabel rentingDate = new JLabel(getFDate(reservation.getRentDate(), "dd-MMM-yy"));
-            JLabel returningDate = new JLabel(getFDate(reservation.getReservationDate(), "dd-MMM-yy"));
+            JLabel returningDate = new JLabel(getFDate(reservation.getReturnDate(), "dd-MMM-yy"));
             JButton delete = new JButton("Delete");
             JButton view = new JButton("View");
             JComponent[] elements = {
@@ -967,15 +980,18 @@ public class PartyRental {
                     view, delete
             };
 
-            int finalY = y;
             delete.addActionListener(e -> {
-                // TODO update reservation from db
-                reservations.remove(finalY);
+                try {
+                    deletingReservation(reservation, userType);
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(mainFrame, ex.getMessage());
+                }
                 navigator.close();
-
                 viewReservations(userType);
             });
-            view.addActionListener(e -> viewReservation(reservation, userType, "made"));
+            view.addActionListener(e -> {
+                viewReservation(reservation, userType, "made");
+            });
             for(int x = 0; x < elements.length; x++) {
                 gbc.gridx = x;
                 table.add(elements[x], gbc);
@@ -1024,7 +1040,7 @@ public class PartyRental {
 
             String rentDateString = getFDate(rentDate, "dd-MM-yyyy");
             String returnDateString = getFDate(returnDate, "dd-MM-yyyy");
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
             try {
                 rentDate = dateFormat.parse(rentDateString);
             } catch (ParseException e) {
@@ -1085,7 +1101,9 @@ public class PartyRental {
         ArrayList<Reservation> reservations;
         try {
             if(userType.equals("customer")) {
-                reservations = getReservations(scripts.selectClientReservations, new Object[]{customer.getClientId()});
+                reservations = getReservations(
+                        scripts.selectClientReservations, new Object[]{customer.getClientId(), "REQUESTED"}
+                );
             } else {
                 reservations = getReservations(scripts.selectReservationsOnStatus, new Object[]{"REQUESTED"});
             }
@@ -1094,7 +1112,7 @@ public class PartyRental {
             return;
         }
 
-        displayReservation(reservations, "viewReservations", userType);
+        displayReservations(reservations, "viewReservations", userType);
     }
 
     private void makePayment(Reservation reservation, float amount) {
@@ -1374,7 +1392,11 @@ public class PartyRental {
         } else {
             deleteApprove = new JButton("Delete");
             deleteApprove.addActionListener(e -> {
-                // todo delete reservation from DB
+                try {
+                    deletingReservation(reservation, userType);
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(mainFrame, ex.getMessage());
+                }
                 navigator.close();
                 navigator.close();
                 viewReservations(userType);
@@ -1404,6 +1426,16 @@ public class PartyRental {
             }
             case "officer" -> {
                 JButton approve = new JButton("Approve");
+                approve.addActionListener(e -> {
+                    try {
+                        ResultSet resultSet = valuedQuery(
+                                scripts.approveReservation, new Object[]{reservation.getReservationId()}
+                        );
+                        resultSet.close();
+                    } catch (SQLException exception) {
+                        JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+                    }
+                });
                 mainElements = new Component[]{
                         container, getPadding(5, 5),
                         scrollPane, getPadding(5, 5),
@@ -1467,7 +1499,7 @@ public class PartyRental {
             reservation.setStatus("RENTED");
         }
 
-        displayReservation(reservations, "recordReturnOrder", "officerReturn");
+        displayReservations(reservations, "recordReturnOrder", "officerReturn");
     }
 
     private void adminPage() {
