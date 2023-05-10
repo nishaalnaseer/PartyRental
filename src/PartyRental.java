@@ -98,8 +98,11 @@ public class PartyRental {
 //        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
 
         back.addActionListener(e -> navigator.close());
-        logout.addActionListener(e -> navigator.close());
-
+        logout.addActionListener(e -> {
+            customer = null;
+            employee = null;
+            navigator.close();
+        });
 
         mainFrame.setVisible(true);
     }
@@ -123,7 +126,7 @@ public class PartyRental {
 
         JLabel label = new JLabel("Sign In");
         label.setHorizontalAlignment(SwingConstants.CENTER);
-        JTextField usernameField = new JTextField("nishawl.naseer@outlook.com");
+        JTextField usernameField = new JTextField("nishawl.naseer1@outlook.com");
         JPasswordField passwordField = new JPasswordField("123");
         JButton loginButton = new JButton("Login");
         JButton createAccount = new JButton("Create Account");
@@ -659,8 +662,14 @@ public class PartyRental {
         createReservation(itemsForReservation, finalGstValue, daysBetween, datePicker1.getDateRaw(), datePicker2.getDateRaw(), userType);
     }
 
-    private float getGst() throws SQLException {
-        Object[] values = new Object[]{customer.getType()};
+    private float getGst(String userType, String cType) throws SQLException {
+        Object[] values;
+        if(userType.equals("customer")) {
+            values = new Object[]{customer.getType()};
+        } else {
+            values = new Object[]{cType};
+        }
+
         ResultSet resultSet = valuedQuery(scripts.getGstRate, values);
         resultSet.next();
         float gstValue = resultSet.getFloat("tax");
@@ -683,7 +692,7 @@ public class PartyRental {
         }
         if(gstValue == 0) {
             try {
-                gstValue = getGst();
+                gstValue = getGst(userType, "");
             } catch (SQLException exception) {
                 JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
                 return;
@@ -1284,7 +1293,7 @@ public class PartyRental {
 
         float gstValue;
         try {
-            gstValue = getGst();
+            gstValue = getGst(userType, client.getType());
         } catch (SQLException exception) {
             JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
             return;
@@ -1432,6 +1441,9 @@ public class PartyRental {
                                 scripts.approveReservation, new Object[]{reservation.getReservationId()}
                         );
                         resultSet.close();
+                        navigator.close();
+                        navigator.close();
+                        viewReservations(userType);
                     } catch (SQLException exception) {
                         JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
                     }
