@@ -128,5 +128,27 @@ public class SqlScripts {
             "UPDATE reservation SET status = 'RESERVATION_CANCELLED' WHERE id = ?";
 
     final String approveReservation =
-            "UPDATE reservation SET status = 'RESERVED' WHERE id = ?";
+            "UPDATE reservation SET status = 'RESERVED', approved_by = ? WHERE id = ?";
+
+    final String selectReservedReservations =
+            "SELECT * FROM reservation WHERE status = 'RESERVED'";
+
+    final String setLeasingCancelled =
+            "UPDATE reservation SET status = 'LEASING_CANCELLED' WHERE id = ?";
+
+    final String setRented =
+            "UPDATE reservation SET status = 'RENTED', rented_by = ? WHERE id = ?";
+
+    final String setReturned =
+            "UPDATE reservation SET status = 'RETURNED', return_accepted_by = ? WHERE id = ?";
+
+    final String selectRentedReservations =
+            "SELECT * FROM reservation WHERE status = 'RENTED'";
+
+    final String selectItem =
+            "SELECT * FROM item WHERE = ?";
+
+    final String updateInventory =
+            "UPDATE item SET available = ?, reserved = ?, rented = ?" +
+                    " WHERE id = ?";
 }

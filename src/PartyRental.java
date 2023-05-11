@@ -36,14 +36,9 @@ public class PartyRental {
     private final SqlScripts scripts = new SqlScripts();
     private Employee employee;
     private Customer customer;
-
-    // TODO the following needs to be queried from DB
-//    ArrayList<Item> items = new ArrayList<>();
-    HashMap<String, Item> items = new HashMap<>();
-    // TODO following needs to be removed from production
-    ArrayList<Reservation> reservations = new ArrayList<>();
-
     Connection connection;
+
+    // TODO adjust inventory according during reservations, cancellations and such
 
     PartyRental() throws SQLException {
         DriverManager.registerDriver(new Driver());
@@ -64,39 +59,7 @@ public class PartyRental {
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         loginPage();
-
-        // TODO the following needs to be queried from DB on runtime not on app init
-//        Item chair = new Item(1, 1, new Date(), "Chair", 50, 0, 0, 0);
-//        Item table = new Item(1, 1, new Date(), "Tabke", 50, 0, 0, 0);
-//        Item poopoo = new Item(1, 1, new Date(), "Poopopopo", 50, 0, 0, 0);
-//        Item nooo = new Item(1, 1, new Date(), "nooo", 50, 0, 0, 0);
-//        Item thisItem = new Item(1, 1, new Date(), "this", 50, 0, 0, 0);
-//        items.put(chair.getDescription(), chair);
-//        items.put(table.getDescription(), table);
-//        items.put(poopoo.getDescription(), poopoo);
-//        items.put(nooo.getDescription(), nooo);
-//        items.put(thisItem.getDescription(), thisItem);
-
-        HashMap<Item, Integer> fadas = new HashMap<>();
-//        fadas.put(chair, 3);
-//        fadas.put(table, 2);
-//        fadas.put(poopoo, 4);
-//        fadas.put(nooo, 7);
-//        fadas.put(thisItem, 2);
-
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-
+        
         back.addActionListener(e -> navigator.close());
         logout.addActionListener(e -> {
             customer = null;
@@ -243,8 +206,8 @@ public class PartyRental {
     }
 
     private void clearManyTexts(JTextField[] textFields) {
-        for(int x = 0; x < textFields.length; x++) {
-            clearTextField(textFields[x]);
+        for (JTextField textField : textFields) {
+            clearTextField(textField);
         }
     }
 
@@ -375,7 +338,7 @@ public class PartyRental {
         JButton makeReservationButton = new JButton("Make Reservation");
         JButton viewReservationButton = new JButton("View Reservations");
         JButton registrations = new JButton("Approve Registrations");
-        JButton returnOrder = new JButton("Renturn Order");
+        JButton returnOrder = new JButton("Return Order");
         JButton rentOrder = new JButton("Rent Order");
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {
@@ -392,9 +355,9 @@ public class PartyRental {
         Object[] selectedStartDate = new String[]{"Select Day", "Select Month", "Select Year"};
         Object[] selectedEndDate = new String[]{"Select Day", "Select Month", "Select Year"};
         makeReservationButton.addActionListener(e -> createReservation(itemsForReservation, 0, 0, selectedStartDate, selectedEndDate, "officer"));
-        viewReservationButton.addActionListener(e -> {
-            viewReservations("officer");
-        });
+        viewReservationButton.addActionListener(e ->
+            viewReservations("officer")
+        );
         registrations.addActionListener(e -> approveRegistration());
         rentOrder.addActionListener(e -> recordRentOrder());
         returnOrder.addActionListener(e -> recordReturnOrder());
@@ -404,34 +367,16 @@ public class PartyRental {
     }
 
     private void recordRentOrder() {
-        // TODO query approved reservations from db
-        //  if rentdate = today add a record button to gui
-//        Item chair = new Item(1, 1, new Date(), "Chair", 50, stock, reserved, rented);
-//        Item table22 = new Item(1, 1, new Date(), "Tabke", 50, stock, reserved, rented);
-//        Item poopoo = new Item(1, 1, new Date(), "Poopopopo", 50, stock, reserved, rented);
-//        Item nooo = new Item(1, 1, new Date(), "nooo", 50, stock, reserved, rented);
-//        Item thisItem = new Item(1, 1, new Date(), "this", 50, stock, reserved, rented);
-
-        HashMap<Item, Integer> fadas = new HashMap<>();
-//        fadas.put(chair, 3);
-//        fadas.put(table22, 2);
-//        fadas.put(poopoo, 4);
-//        fadas.put(nooo, 7);
-//        fadas.put(thisItem, 2);
-
-        ArrayList<Reservation> reservations = new ArrayList<>();
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
+        // TODO ONLY if rentdate = today to sql script
+        ArrayList<Reservation> reservations;
+        try {
+            reservations = getReservations(
+                    scripts.selectReservedReservations, new Object[]{}
+            );
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+            return;
+        }
 
         for(int x = 0; x < reservations.size(); x++) {
             Reservation reservation = reservations.get(0);
@@ -623,9 +568,9 @@ public class PartyRental {
             createReservation(itemsForReservation, 0, 0,
                     selectedStartDate, selectedEndDate, "customer");
         });
-        viewReservationButton.addActionListener(e -> {
-            viewReservations("customer");
-        });
+        viewReservationButton.addActionListener(e ->
+            viewReservations("customer")
+        );
 
         panel.add(container);
         navigator.open(panel, "createAccount");
@@ -927,10 +872,12 @@ public class PartyRental {
 
     private void deletingReservation(Reservation reservation, String userType) throws SQLException {
         String script;
-        if (userType.equals("customer")) {
-            script = scripts.cancelReservation;
-        } else {
-            script = scripts.denyReservation;
+
+        switch (userType) {
+            case "customer" -> script = scripts.cancelReservation;
+            case "officer" -> script = scripts.denyReservation;
+            case "officerRent" -> script = scripts.setLeasingCancelled;
+            default -> script = "";
         }
 
         ResultSet resultSet = valuedQuery(script, new Object[]{reservation.getReservationId()});
@@ -984,11 +931,19 @@ public class PartyRental {
             JLabel returningDate = new JLabel(getFDate(reservation.getReturnDate(), "dd-MMM-yy"));
             JButton delete = new JButton("Delete");
             JButton view = new JButton("View");
-            JComponent[] elements = {
-                    id, name, remarks, reservationDate, rentingDate, returningDate,
-                    view, delete
-            };
 
+            JComponent[] elements;
+            if (!userType.equals("officerReturn")) {
+                elements = new JComponent[]{
+                        id, name, remarks, reservationDate, rentingDate, returningDate,
+                        view,
+                };
+            } else {
+                elements = new JComponent[]{
+                        id, name, remarks, reservationDate, rentingDate, returningDate,
+                        view, delete
+                };
+            }
             delete.addActionListener(e -> {
                 try {
                     deletingReservation(reservation, userType);
@@ -998,9 +953,9 @@ public class PartyRental {
                 navigator.close();
                 viewReservations(userType);
             });
-            view.addActionListener(e -> {
-                viewReservation(reservation, userType, "made");
-            });
+            view.addActionListener(e ->
+                viewReservation(reservation, userType, "made")
+            );
             for(int x = 0; x < elements.length; x++) {
                 gbc.gridx = x;
                 table.add(elements[x], gbc);
@@ -1187,7 +1142,7 @@ public class PartyRental {
                 ResultSet resultSet = valuedQuery(scripts.insertReservation, values);
                 resultSet.close();
             } catch (SQLException exception) {
-                JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
+                JOptionPane.showMessageDialog(mainFrame, "Error: " + exception.getMessage());
                 return;
             }
 
@@ -1199,7 +1154,7 @@ public class PartyRental {
                 resultSet.next();
                 reservationID = resultSet.getInt("id");
             } catch (SQLException exception) {
-                JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
+                JOptionPane.showMessageDialog(mainFrame, "Error: " + exception.getMessage());
                 return;
             }
 
@@ -1209,7 +1164,7 @@ public class PartyRental {
             try {
                 items = dbToHashMap(false);
             } catch (SQLException exception) {
-                JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
+                JOptionPane.showMessageDialog(mainFrame, "Error: " + exception.getMessage());
                 return;
             }
             for(String description : reservationItems.keySet()) {
@@ -1223,7 +1178,7 @@ public class PartyRental {
                     ResultSet resultSet = valuedQuery(scripts.insertReservationItem, values);
                     resultSet.close();
                 } catch (SQLException exception) {
-                    JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
+                    JOptionPane.showMessageDialog(mainFrame, "Error: " + exception.getMessage());
                     return;
                 }
             }
@@ -1237,7 +1192,7 @@ public class PartyRental {
                 ResultSet resultSet = valuedQuery(scripts.insertTransaction, values);
                 resultSet.close();
             } catch (SQLException exception) {
-                JOptionPane.showMessageDialog(mainFrame, "Erorr: " + exception.getMessage());
+                JOptionPane.showMessageDialog(mainFrame, "Error: " + exception.getMessage());
                 return;
             }
 
@@ -1261,6 +1216,12 @@ public class PartyRental {
         JPanel container = guiPlacer.getContainer();
         panel.add(container);
         navigator.open(panel, "makePayment");
+    }
+
+    private void updateInventory(
+            HashMap<String, Item> items, HashMap<String, Integer> reservationItems, String script
+            ){
+
     }
 
     private void viewReservation(Reservation reservation, String userType, String info) {
@@ -1395,13 +1356,48 @@ public class PartyRental {
         JButton deleteApprove;
         if(info.equals("make")) {
             deleteApprove = new JButton("Submit");
-            deleteApprove.addActionListener(e -> {
-                makePayment(reservation, reservation.getTotal()/2);
-            });
+            deleteApprove.addActionListener(e ->
+                makePayment(reservation, reservation.getTotal()/2)
+            );
         } else {
             deleteApprove = new JButton("Delete");
             deleteApprove.addActionListener(e -> {
+                // TODO adjust inventory
+
                 try {
+                    HashMap<String, Integer>  itemsUsed = reservation.getItems();
+                    ResultSet deleteSet;
+
+                    if (userType.equals("officerRent")) {
+                        for(String description : itemsUsed.keySet()) {
+                            int quantity = itemsUsed.get(description);
+                            Item dbItem = items.get(description);
+                            int itemID = dbItem.getId();
+
+                            deleteSet = valuedQuery(scripts.selectItem, new Object[]{itemID});
+                            deleteSet.next();
+
+                            int available = deleteSet.getInt("available");
+                            int reserved = deleteSet.getInt("reserved");
+                            int rented = deleteSet.getInt("rented");
+
+                            if (reserved - quantity < 0) {
+                                JOptionPane.showMessageDialog(mainFrame, dbItem.getDescription() + " qty is below zero");
+                                return;
+                            } else {
+                                reserved -= quantity;
+                                available += quantity;
+                            }
+
+                            deleteSet.close();
+//                    "UPDATE item SET available = ?, reserved = ?, rented = ?" +
+//                            " WHERE id = ?"
+                            Object[] updateValues = new Object[]{available, reserved, rented, itemID};
+                            ResultSet updateSet = valuedQuery(scripts.updateInventory, updateValues);
+                            updateSet.close();
+                        }
+                    }
+
                     deletingReservation(reservation, userType);
                 } catch (SQLException ex) {
                     JOptionPane.showMessageDialog(mainFrame, ex.getMessage());
@@ -1412,64 +1408,140 @@ public class PartyRental {
             });
         }
 
+        String script;
+        JButton variedButton;
+        Object[] values;
         GuiPlacer main = new GuiPlacer(400, 500);
         Component[] mainElements;
         switch (userType) {
-            case "customer" -> mainElements = new Component[]{
-                    container, getPadding(5, 5),
-                    scrollPane, getPadding(5, 5),
-                    container2, getPadding(5, 5),
-                    deleteApprove, getPadding(5, 5),
-                    back, getPadding(5, 5)
-            };
-            case "officerRent" -> {
-                JButton rentOrder = new JButton("Record Rent Order");
+            case "customer" -> {
+                variedButton = new JButton("");
+                script = "";
+                values = new Object[]{};
                 mainElements = new Component[]{
                         container, getPadding(5, 5),
                         scrollPane, getPadding(5, 5),
                         container2, getPadding(5, 5),
-                        rentOrder, getPadding(5, 5),
+                        deleteApprove, getPadding(5, 5),
+                        back, getPadding(5, 5)
+                };
+            }
+            case "officerRent" -> {
+                variedButton = new JButton("Record Rent Order");
+                script = scripts.setRented;
+                values = new Object[]{employee.getId(), reservation.getReservationId()};
+                mainElements = new Component[]{
+                        container, getPadding(5, 5),
+                        scrollPane, getPadding(5, 5),
+                        container2, getPadding(5, 5),
+                        variedButton, getPadding(5, 5),
                         deleteApprove, getPadding(5, 5),
                         back, getPadding(5, 5),
                 };
             }
             case "officer" -> {
-                JButton approve = new JButton("Approve");
-                approve.addActionListener(e -> {
-                    try {
-                        ResultSet resultSet = valuedQuery(
-                                scripts.approveReservation, new Object[]{reservation.getReservationId()}
-                        );
-                        resultSet.close();
-                        navigator.close();
-                        navigator.close();
-                        viewReservations(userType);
-                    } catch (SQLException exception) {
-                        JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
-                    }
-                });
+                script = scripts.approveReservation;
+                variedButton = new JButton("Approve Reservation");
+                values = new Object[]{employee.getId(), reservation.getReservationId()};
                 mainElements = new Component[]{
                         container, getPadding(5, 5),
                         scrollPane, getPadding(5, 5),
                         container2, getPadding(5, 5),
-                        approve, getPadding(5, 5),
+                        variedButton, getPadding(5, 5),
                         deleteApprove, getPadding(5, 5),
                         back, getPadding(5, 5),
                 };
             }
             case "officerReturn" -> {
-                JButton recordReturn = new JButton("Record Return Order");
+                variedButton = new JButton("Record Return Order");
+                script = scripts.setReturned;
+                values = new Object[]{employee.getId(), reservation.getReservationId()};
                 mainElements = new Component[]{
                         container, getPadding(5, 5),
                         scrollPane, getPadding(5, 5),
                         container2, getPadding(5, 5),
-                        recordReturn, getPadding(5, 5),
-                        deleteApprove, getPadding(5, 5),
+                        variedButton, getPadding(5, 5),
                         back, getPadding(5, 5),
                 };
             }
-            default -> mainElements = new Component[]{};
+            default -> {
+                mainElements = new Component[]{};
+                script = "";
+                variedButton = new JButton();
+                values = new Object[]{};
+            }
         }
+
+        variedButton.addActionListener(e -> {
+            try {
+                final HashMap<String, Item> item = dbToHashMap(false);
+                ResultSet itemSet;
+                final  HashMap<String, Integer> itemsUsed =  reservation.getItems();
+                for(String description : itemsUsed.keySet()) {
+                    int quantity = itemsUsed.get(description);
+                    Item dbItem = items.get(description);
+                    int itemID = dbItem.getId();
+
+                    itemSet = valuedQuery(scripts.selectItem, new Object[]{itemID});
+                    itemSet.next();
+
+                    int available = itemSet.getInt("available");
+                    int reserved = itemSet.getInt("reserved");
+                    int rented = itemSet.getInt("rented");
+
+                    switch (userType) {
+                        case "officer" -> {
+                            if (available - quantity < 0) {
+                                JOptionPane.showMessageDialog(mainFrame, dbItem.getDescription() + " qty is below zero");
+                                return;
+                            } else {
+                                available -= quantity;
+                                reserved += quantity;
+                            }
+                        }
+                        case "officerRent" -> {
+                            if (reserved - quantity < 0) {
+                                JOptionPane.showMessageDialog(mainFrame, dbItem.getDescription() + " qty is below zero");
+                                return;
+                            } else {
+                                reserved -= quantity;
+                                rented += quantity;
+                            }
+                        }
+                        case "officerReturn" -> {
+                            if (rented - quantity < 0) {
+                                JOptionPane.showMessageDialog(mainFrame, dbItem.getDescription() + " qty is below zero");
+                                return;
+                            } else {
+                                rented -= quantity;
+                                available -= quantity;
+                            }
+                        }
+                        // do nothing
+                        default -> {
+                            JOptionPane.showMessageDialog(mainFrame, dbItem.getDescription() + "userType: " + userType);
+                            return;
+                        }
+                    }
+                    itemSet.close();
+//                    "UPDATE item SET available = ?, reserved = ?, rented = ?" +
+//                            " WHERE id = ?"
+                    Object[] updateValues = new Object[]{available, reserved, rented, itemID};
+                    ResultSet updateSet = valuedQuery(scripts.updateInventory, updateValues);
+                    updateSet.close();
+                }
+
+                ResultSet resultSet = valuedQuery(
+                        script, values
+                );
+                resultSet.close();
+                navigator.close();
+                navigator.close();
+                viewReservations(userType);
+            } catch (SQLException exception) {
+                JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+            }
+        });
 
         main.verticalPlacer(mainElements);
         JPanel panel = main.getContainer();
@@ -1477,40 +1549,17 @@ public class PartyRental {
     }
 
     private void recordReturnOrder() {
-        // TODO query approved reservations from db
-        //  if rentdate = today add a record button to gui
-//        Item chair = new Item(1, 1, new Date(), "Chair", 50, stock, reserved, rented);
-//        Item table22 = new Item(1, 1, new Date(), "Tabke", 50, stock, reserved, rented);
-//        Item poopoo = new Item(1, 1, new Date(), "Poopopopo", 50, stock, reserved, rented);
-//        Item nooo = new Item(1, 1, new Date(), "nooo", 50, stock, reserved, rented);
-//        Item thisItem = new Item(1, 1, new Date(), "this", 50, stock, reserved, rented);
+        // TODO get return_date = today from db
 
-        HashMap<Item, Integer> fadas = new HashMap<>();
-//        fadas.put(chair, 3);
-//        fadas.put(table22, 2);
-//        fadas.put(poopoo, 4);
-//        fadas.put(nooo, 7);
-//        fadas.put(thisItem, 2);
-
-        ArrayList<Reservation> reservations = new ArrayList<>();
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks2", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks3", new Date(), new Date(), new Date()));
-//        reservations.add(new Reservation(1, 1, fadas, "String remarks4", new Date(), new Date(), new Date()));
-
-        for(int x = 0; x < reservations.size(); x++) {
-            Reservation reservation = reservations.get(0);
-            reservation.setStatus("RENTED");
+        ArrayList<Reservation> reservations;
+        try {
+            reservations = getReservations(
+                    scripts.selectRentedReservations, new Object[]{}
+            );
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+            return;
         }
-
         displayReservations(reservations, "recordReturnOrder", "officerReturn");
     }
 
@@ -1689,8 +1738,6 @@ public class PartyRental {
                 }
                 JComponent[] elements = new JComponent[]{id, name, email, roleType, status, change};
                 change.addActionListener(e -> {
-//                    String selectedOption = (String) JOptionPane.showInputDialog(mainFrame, "Select New Status", "Status",
-//                            JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
                     String selectedOption = change.getText();
                     if(selectedOption != null) {
                         selectedOption += "D";
@@ -1724,7 +1771,6 @@ public class PartyRental {
             resultSet.close();
         } catch (SQLException exception) {
             JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
-            return;
         }
     }
 
@@ -1864,10 +1910,6 @@ public class PartyRental {
                 JOptionPane.showMessageDialog(mainFrame, "Item already exists");
                 return;
             }
-//            "INSERT INTO item (description, rate, created_by, created_on, " +
-//                    "stock, available, reserved, rented) " +
-//                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
 
             values = new Object[]{
                     descriptionValue, rateValue, employee.getId(), dateToDB(new Date()),
