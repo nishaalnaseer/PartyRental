@@ -38,7 +38,8 @@ public class PartyRental {
     private Customer customer;
     Connection connection;
 
-    // TODO adjust inventory according during reservations, cancellations and such
+    // TODO TEST adjust inventory according during reservations, cancellations and such
+    // TODO adjust paid in reservations as now its 0 even when items are returned
 
     PartyRental() throws SQLException {
         DriverManager.registerDriver(new Driver());
@@ -354,7 +355,9 @@ public class PartyRental {
         HashMap<String, Integer> itemsForReservation = new HashMap<>();
         Object[] selectedStartDate = new String[]{"Select Day", "Select Month", "Select Year"};
         Object[] selectedEndDate = new String[]{"Select Day", "Select Month", "Select Year"};
-        makeReservationButton.addActionListener(e -> createReservation(itemsForReservation, 0, 0, selectedStartDate, selectedEndDate, "officer"));
+        makeReservationButton.addActionListener(e ->
+                createReservation(itemsForReservation, 0, 0, selectedStartDate, selectedEndDate, "officer")
+        );
         viewReservationButton.addActionListener(e ->
             viewReservations("officer")
         );
@@ -371,7 +374,7 @@ public class PartyRental {
         ArrayList<Reservation> reservations;
         try {
             reservations = getReservations(
-                    scripts.selectReservedReservations, new Object[]{}
+                    scripts.selectReservedReservations, new Object[]{}, ""
             );
         } catch (SQLException exception) {
             JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
@@ -546,14 +549,30 @@ public class PartyRental {
         navigator.open(panel, "customerApproveReject");
     }
 
+    private void rentingReservation() {
+
+        ArrayList<Reservation> reservations;
+        try {
+            Object[] values = new Object[]{customer.getClientId()};
+            reservations = getReservations(scripts.selectRentingReservations, values, "no");
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+            return;
+        }
+
+        displayReservations(reservations, "rentingReservations", "customerRentingPay");
+    }
+
     private void customerPage() {
         JPanel panel = new JPanel();
         JButton makeReservationButton = new JButton("Make Reservation");
         JButton viewReservationButton = new JButton("View Reservations");
+        JButton payRenting = new JButton("Pay Renting");
 
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {
                 makeReservationButton, getPadding(10, 5),
+                payRenting, getPadding(10, 5),
                 viewReservationButton, getPadding(10, 5),
                 logout
         };
@@ -571,6 +590,7 @@ public class PartyRental {
         viewReservationButton.addActionListener(e ->
             viewReservations("customer")
         );
+        payRenting.addActionListener(e -> rentingReservation());
 
         panel.add(container);
         navigator.open(panel, "createAccount");
@@ -596,7 +616,7 @@ public class PartyRental {
         LocalDate date2 = end.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         long daysBetween = ChronoUnit.DAYS.between(date1, date2);
 
-        if(daysBetween <= 1) {
+        if(daysBetween < 1) {
             itemsForReservation.put(item.getDescription(), amount);
             navigator.close();
             createReservation(itemsForReservation, finalGstValue, 0, datePicker1.getDateRaw(), datePicker2.getDateRaw(), userType);
@@ -874,7 +894,7 @@ public class PartyRental {
         String script;
 
         switch (userType) {
-            case "customer" -> script = scripts.cancelReservation;
+            case "customer", "customerRentingPay" -> script = scripts.cancelReservation;
             case "officer" -> script = scripts.denyReservation;
             case "officerRent" -> script = scripts.setLeasingCancelled;
             default -> script = "";
@@ -986,7 +1006,7 @@ public class PartyRental {
         return new Customer(id, name, password, email, type, status);
     }
 
-    ArrayList<Reservation> getReservations(String script, Object[] values) throws SQLException {
+    ArrayList<Reservation> getReservations(String script, Object[] values, String userType) throws SQLException {
 
         ResultSet resultSet = valuedQuery(script, values);
         ArrayList<Reservation> reservations = new ArrayList<>();
@@ -1001,6 +1021,15 @@ public class PartyRental {
             String status = resultSet.getString("status");
             float gst = resultSet.getFloat("gst");
             float subtotal = resultSet.getFloat("subtotal");
+
+            if(userType.equals("customerPay")) {
+                // employee is checking for todays reservation that needs to be rented but this check
+                // skips reservations not fully paid
+
+                if(paid == subtotal+gst) {
+                    continue;
+                }
+            }
 
             String rentDateString = getFDate(rentDate, "dd-MM-yyyy");
             String returnDateString = getFDate(returnDate, "dd-MM-yyyy");
@@ -1066,10 +1095,10 @@ public class PartyRental {
         try {
             if(userType.equals("customer")) {
                 reservations = getReservations(
-                        scripts.selectClientReservations, new Object[]{customer.getClientId(), "REQUESTED"}
+                        scripts.selectClientReservations, new Object[]{customer.getClientId()}, userType
                 );
             } else {
-                reservations = getReservations(scripts.selectReservationsOnStatus, new Object[]{"REQUESTED"});
+                reservations = getReservations(scripts.selectReservationsOnStatus, new Object[]{"REQUESTED"}, userType);
             }
         } catch (SQLException exception) {
             JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
@@ -1079,7 +1108,7 @@ public class PartyRental {
         displayReservations(reservations, "viewReservations", userType);
     }
 
-    private void makePayment(Reservation reservation, float amount) {
+    private void makePayment(Reservation reservation, float amount, String time) {
         JPanel panel = new JPanel(new GridBagLayout());
         // todo check if card expired?
 
@@ -1088,9 +1117,13 @@ public class PartyRental {
         JTextField expYY = new JTextField("Expiry Year(YY): ");
         JTextField sec = new JTextField("Security Code: ");
         JButton submit = new JButton("Make Transaction");
+        JButton back = new JButton("Back");
         JTextField[] fields = new JTextField[]{
                 name, expMM, expYY, sec
         };
+        back.addActionListener(e -> {
+            navigator.close();
+        });
         clearManyTexts(fields);
 
         submit.addActionListener(e -> {
@@ -1135,59 +1168,77 @@ public class PartyRental {
                     dateToDB(reservation.getRentDate()),
                     dateToDB(reservation.getReturnDate()),
                     reservation.getGst(),
-                    reservation.getSubTotal()
+                    reservation.getSubTotal(),
+                    reservation.getTotal() / 2
             };
-
-            try {
-                ResultSet resultSet = valuedQuery(scripts.insertReservation, values);
-                resultSet.close();
-            } catch (SQLException exception) {
-                JOptionPane.showMessageDialog(mainFrame, "Error: " + exception.getMessage());
-                return;
-            }
-
-            // reservation entry just got inserted lets query the id now
             int reservationID;
-            try {
-                values = new Object[] {customer.getClientId()};
-                ResultSet resultSet = valuedQuery(scripts.selectReservationID, values);
-                resultSet.next();
-                reservationID = resultSet.getInt("id");
-            } catch (SQLException exception) {
-                JOptionPane.showMessageDialog(mainFrame, "Error: " + exception.getMessage());
-                return;
-            }
-
-            // reservation items details to db
-            HashMap<String, Integer> reservationItems = reservation.getItems();
-            HashMap<String, Item> items;
-            try {
-                items = dbToHashMap(false);
-            } catch (SQLException exception) {
-                JOptionPane.showMessageDialog(mainFrame, "Error: " + exception.getMessage());
-                return;
-            }
-            for(String description : reservationItems.keySet()) {
-                Integer quantity = reservationItems.get(description);
-                Item item = items.get(description);
-                values = new Object[]{
-                        reservationID, item.getId(), quantity
-                };
-
+            if(time.equals("first")) {
                 try {
-                    ResultSet resultSet = valuedQuery(scripts.insertReservationItem, values);
+                    ResultSet resultSet = valuedQuery(scripts.insertReservation, values);
                     resultSet.close();
                 } catch (SQLException exception) {
                     JOptionPane.showMessageDialog(mainFrame, "Error: " + exception.getMessage());
                     return;
                 }
+
+                try {
+                    values = new Object[] {customer.getClientId()};
+                    ResultSet resultSet = valuedQuery(scripts.selectReservationID, values);
+                    resultSet.next();
+                    reservationID = resultSet.getInt("id");
+                } catch (SQLException exception) {
+                    JOptionPane.showMessageDialog(mainFrame, "Error: " + exception.getMessage());
+                    return;
+                }
+
+                // reservation items details to db
+                HashMap<String, Integer> reservationItems = reservation.getItems();
+                HashMap<String, Item> items;
+                try {
+                    items = dbToHashMap(false);
+                } catch (SQLException exception) {
+                    JOptionPane.showMessageDialog(mainFrame, "Error: " + exception.getMessage());
+                    return;
+                }
+                for(String description : reservationItems.keySet()) {
+                    Integer quantity = reservationItems.get(description);
+                    Item item = items.get(description);
+                    values = new Object[]{
+                            reservationID, item.getId(), quantity
+                    };
+
+                    try {
+                        ResultSet resultSet = valuedQuery(scripts.insertReservationItem, values);
+                        resultSet.close();
+                    } catch (SQLException exception) {
+                        JOptionPane.showMessageDialog(mainFrame, "Error: " + exception.getMessage());
+                        return;
+                    }
+                }
+            } else {
+                try {
+                    reservationID = reservation.getReservationId();
+                    ResultSet resultSet = valuedQuery(
+                            scripts.selectPreviousTransactions, new Object[]{reservationID});
+                    float paid = 0;
+                    while(resultSet.next()) {
+                        paid += resultSet.getFloat("amount");
+                    }
+                    resultSet.close();
+
+                    ResultSet updateSet = valuedQuery(
+                            scripts.updateReservationPayment, new Object[]{paid + amount, reservationID}
+                            );
+                    updateSet.close();
+                } catch (SQLException exception) {
+                    JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+                    return;
+                }
             }
 
-            // transaction details to db
             values = new Object[]{
                     amount, reservationID, month, year, secCode, cardName
             };
-
             try {
                 ResultSet resultSet = valuedQuery(scripts.insertTransaction, values);
                 resultSet.close();
@@ -1216,12 +1267,6 @@ public class PartyRental {
         JPanel container = guiPlacer.getContainer();
         panel.add(container);
         navigator.open(panel, "makePayment");
-    }
-
-    private void updateInventory(
-            HashMap<String, Item> items, HashMap<String, Integer> reservationItems, String script
-            ){
-
     }
 
     private void viewReservation(Reservation reservation, String userType, String info) {
@@ -1285,7 +1330,7 @@ public class PartyRental {
         JLabel total = new JLabel("Total");
         JLabel totalAmount = new JLabel(String.valueOf(reservation.getTotal()));
 
-        JLabel alreadyPaidLabel = new JLabel("Initially Paid");
+        JLabel alreadyPaidLabel = new JLabel("Total Paid");
         JLabel alreadyPaidAmount = new JLabel(String.valueOf(reservation.getPaid()));
 
         JScrollPane scrollPane = new JScrollPane(table);
@@ -1352,23 +1397,25 @@ public class PartyRental {
         GuiPlacer placer2 = new GuiPlacer(400, 500);
         placer2.vhPlacer(mDElements);
         JPanel container2 = placer2.getContainer();
-
+        JButton pay = new JButton("Pay Remaining");
+        pay.addActionListener(e -> {
+            makePayment(reservation, reservation.getTotal() - reservation.getPaid(), "second");
+        });
         JButton deleteApprove;
         if(info.equals("make")) {
             deleteApprove = new JButton("Submit");
             deleteApprove.addActionListener(e ->
-                makePayment(reservation, reservation.getTotal()/2)
+                makePayment(reservation, reservation.getTotal()/2, "first")
             );
         } else {
             deleteApprove = new JButton("Delete");
             deleteApprove.addActionListener(e -> {
-                // TODO adjust inventory
-
-                try {
+                try
+                {
                     HashMap<String, Integer>  itemsUsed = reservation.getItems();
                     ResultSet deleteSet;
 
-                    if (userType.equals("officerRent")) {
+                    if (userType.equals("officerRent") || userType.equals("customerRentingPay")) {
                         for(String description : itemsUsed.keySet()) {
                             int quantity = itemsUsed.get(description);
                             Item dbItem = items.get(description);
@@ -1464,6 +1511,20 @@ public class PartyRental {
                         back, getPadding(5, 5),
                 };
             }
+            case "customerRentingPay" -> {
+                variedButton = new JButton("Delete");  // just so compiler can be sane
+                script = ""; // just so compiler can be sane
+                values = new Object[]{}; // just so compiler can be sane
+
+                mainElements = new Component[]{
+                        container, getPadding(5, 5),
+                        scrollPane, getPadding(5, 5),
+                        container2, getPadding(5, 5),
+                        pay, getPadding(5, 5),
+                        deleteApprove, getPadding(5, 5),
+                        back, getPadding(5, 5),
+                };
+            }
             default -> {
                 mainElements = new Component[]{};
                 script = "";
@@ -1474,7 +1535,6 @@ public class PartyRental {
 
         variedButton.addActionListener(e -> {
             try {
-                final HashMap<String, Item> item = dbToHashMap(false);
                 ResultSet itemSet;
                 final  HashMap<String, Integer> itemsUsed =  reservation.getItems();
                 for(String description : itemsUsed.keySet()) {
@@ -1514,7 +1574,7 @@ public class PartyRental {
                                 return;
                             } else {
                                 rented -= quantity;
-                                available -= quantity;
+                                available += quantity;
                             }
                         }
                         // do nothing
@@ -1524,8 +1584,7 @@ public class PartyRental {
                         }
                     }
                     itemSet.close();
-//                    "UPDATE item SET available = ?, reserved = ?, rented = ?" +
-//                            " WHERE id = ?"
+
                     Object[] updateValues = new Object[]{available, reserved, rented, itemID};
                     ResultSet updateSet = valuedQuery(scripts.updateInventory, updateValues);
                     updateSet.close();
@@ -1554,7 +1613,7 @@ public class PartyRental {
         ArrayList<Reservation> reservations;
         try {
             reservations = getReservations(
-                    scripts.selectRentedReservations, new Object[]{}
+                    scripts.selectRentedReservations, new Object[]{}, "no"
             );
         } catch (SQLException exception) {
             JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
@@ -1856,8 +1915,69 @@ public class PartyRental {
         add.addActionListener(e -> addItem());
         adjust.addActionListener(e -> viewItems());
 
-        GuiPlacer mainPlacer = new GuiPlacer(400, 500);
+        HashMap<String, Item> items;
+        try {
+            items = dbToHashMap(false);
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+            return;
+        }
+        JPanel table = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridy = 0;
+        gbc.weighty = 0;
+        gbc.weightx = 0;
+
+        JLabel idHeading = new JLabel("ID");
+        JLabel descriptionHeading = new JLabel("Description");
+        JLabel rateHeading = new JLabel("Rate");
+        JLabel createdByHeading = new JLabel("Created By");
+        JLabel createdOnHeading = new JLabel("Created On");
+        JLabel stockHeading = new JLabel("Stock");
+        JLabel availableHeading = new JLabel("Available");
+        JLabel reservedHeading = new JLabel("Reserved");
+        JLabel rentedHeading = new JLabel("Rented");
+        JComponent[] horizontalElements = new JComponent[]{
+                idHeading, descriptionHeading, rateHeading,
+                createdByHeading, createdOnHeading, stockHeading,
+                availableHeading, reservedHeading, rentedHeading
+        };
+        for(int x = 0; x < horizontalElements.length; x++) {
+            gbc.gridx = x;
+            JComponent element = horizontalElements[x];
+            table.add(element, gbc);
+        }
+
+        for(Item item : items.values()) {
+            gbc.gridy++;
+            JLabel id = new JLabel(String.valueOf(item.getId()));
+            JLabel description = new JLabel(item.getDescription());
+            JLabel rate = new JLabel(String.valueOf(item.getRate()));
+            JLabel createdBy = new JLabel(String.valueOf(item.getCreatedBy()));
+            JLabel createdOn = new JLabel(String.valueOf(item.getDate()));
+            JLabel stock = new JLabel(String.valueOf(item.getStock()));
+            JLabel available = new JLabel(String.valueOf(item.getAvailable()));
+            JLabel reserved = new JLabel(String.valueOf(item.getReserved()));
+            JLabel rented = new JLabel(String.valueOf(item.getRented()));
+
+            JComponent[] elements = new JComponent[]{
+                    id, description, rate, createdBy,
+                    createdOn, stock, available, reserved,
+                    rented
+            };
+            for(int x = 0; x < elements.length; x++) {
+                gbc.gridx = x;
+                JComponent element = elements[x];
+
+                table.add(element, gbc);
+            }
+        }
+
+        JScrollPane scrollPane = scrollTable(table, 600, 400);
+
+        GuiPlacer mainPlacer = new GuiPlacer(600, 700);
         JComponent[] mainElements = new  JComponent[]{
+                scrollPane, getPadding(10, 5),
                 add, getPadding(10, 5),
                 adjust, getPadding(10, 5),
                 back, getPadding(10, 5),

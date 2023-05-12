@@ -1,8 +1,6 @@
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -17,8 +15,8 @@ public class Reservation {
     private ReservationStatus status;
     private String internalRemarks = "";
 
-    private float subtotal = 0;
-    private float gst = 0;
+    private final float subtotal;
+    private final float gst;
     private long days;
     private float paid = 0;
     private int approvedBy;
@@ -81,40 +79,9 @@ public class Reservation {
         return rentDate;
     }
 
-    public void setRentDate(Date rentDate) {
-        this.rentDate = rentDate;
-    }
-
     public Date getReturnDate() {
         return returnDate;
     }
-
-    public void setReturnDate(Date returnDate) {
-        this.returnDate = returnDate;
-    }
-
-    public float getSubtotal() {
-        return subtotal;
-    }
-
-//    void addItems(Item[] items) {
-//        for(int x = 0; x < items.length; x++) {
-//            Item item = items[x];
-//
-//            int prevQty;
-//            try {
-//                prevQty = this.items.get(item);
-//                prevQty++;
-//                this.items.put(item, prevQty);
-//            } catch (NullPointerException ex) {
-//                this.items.put(item, 1);
-//            }
-//
-//            float rate = item.getRate();
-////            gst+= rate * 0.06;
-//            subtotal+=rate;
-//        }
-//    }
 
     public Customer getCustomer() {
         return customer;

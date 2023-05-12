@@ -93,8 +93,8 @@ public class SqlScripts {
 
     final String insertReservation =
             "INSERT INTO reservation (customer, remarks, reservation_date, " +
-                    "rent_date, return_date, gst, subtotal)" +
-                    " VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    "rent_date, return_date, gst, subtotal, paid)" +
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
     final String insertTransaction =
             "INSERT INTO transaction(amount, reservation_id, card_mm, " +
@@ -116,7 +116,7 @@ public class SqlScripts {
             "item.id WHERE reservation_id = ?";
 
     final String selectClientReservations =
-            "SELECT * FROM reservation WHERE customer = ? AND status = 'REQUESTED'";
+            "SELECT * FROM reservation WHERE customer = ? and STATUS != 'RETURNED'";
 
     final String selectReservationsOnStatus =
             "SELECT * FROM reservation WHERE status = ?";
@@ -130,6 +130,8 @@ public class SqlScripts {
     final String approveReservation =
             "UPDATE reservation SET status = 'RESERVED', approved_by = ? WHERE id = ?";
 
+    // TODO the below script is before for reservation status changes to RENTED so add
+    //  rent_date = today() to the script
     final String selectReservedReservations =
             "SELECT * FROM reservation WHERE status = 'RESERVED'";
 
@@ -142,13 +144,24 @@ public class SqlScripts {
     final String setReturned =
             "UPDATE reservation SET status = 'RETURNED', return_accepted_by = ? WHERE id = ?";
 
+    // TODO the below script is before for reservation status changes to RETURNED so add
+    //  return_date = today() to the script
     final String selectRentedReservations =
             "SELECT * FROM reservation WHERE status = 'RENTED'";
 
     final String selectItem =
-            "SELECT * FROM item WHERE = ?";
+            "SELECT * FROM item WHERE id = ?";
 
     final String updateInventory =
             "UPDATE item SET available = ?, reserved = ?, rented = ?" +
                     " WHERE id = ?";
+
+    final String selectRentingReservations =
+            "SELECT * FROM reservation WHERE status = 'RESERVED' AND customer = ?";
+
+    final String selectPreviousTransactions =
+            "SELECT * FROM transaction WHERE reservation_id = ?";
+
+    final String updateReservationPayment =
+            "UPDATE reservation SET paid = ? WHERE id = ?";
 }

@@ -1,7 +1,4 @@
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 
@@ -10,7 +7,6 @@ public class DatePicker {
     private final JComboBox<String> dayComboBox;
     private final JComboBox<String> monthComboBox;
     private final JComboBox<String> yearComboBox;
-    private final JLabel label;
     final HashMap<String, Integer> monthDays;
 
     DatePicker(String text, Object[] selectedDate) {
@@ -31,35 +27,20 @@ public class DatePicker {
         monthDays.put("June", 30);
         monthDays.put("September", 30);
         monthDays.put("November", 30);
-//
+
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-        String[] years = new String[101];
+        String[] years = new String[3];
         years[0] = "Select Year";
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 2; i++) {
             int year = currentYear + i;
             years[i+1] = Integer.toString(year);
         }
         yearComboBox = new JComboBox<>(years);
 
-        monthComboBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-//                if (!monthComboBox.getSelectedItem().equals("Select Month")) {
-//                    JOptionPane.showMessageDialog(null, "Select a Month");
-//                    return;
-//                }
+        monthComboBox.addActionListener(e -> setDays());
+        yearComboBox.addActionListener(e -> setDays());
 
-                setDays();
-            }
-        });
-        yearComboBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setDays();
-            }
-        });
-//
-        label = new JLabel(text);
+        JLabel label = new JLabel(text);
         panel = new JPanel();
         dayComboBox = new JComboBox<>();
         enterDays(31);
@@ -72,10 +53,6 @@ public class DatePicker {
         panel.add(dayComboBox);
         panel.add(monthComboBox);
         panel.add(yearComboBox);
-    }
-    void print(String text) {
-        // development code delete on production
-        System.out.println(text);
     }
 
     private void setDays() {
