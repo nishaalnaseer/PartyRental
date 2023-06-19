@@ -3,6 +3,11 @@ import java.awt.*;
 import java.util.Stack;
 
 public class Navigator {
+    /*
+    class to handles opening and closing of panels
+    it really works by putting panels into a stack. what's displayed is at the top of the stack
+    got the idea from flutter, java < flutter for client side applications
+     */
     private final Stack<JPanel> stack = new Stack<>();
     private final JFrame root;
     private final CardLayout layout;

@@ -1,4 +1,7 @@
 public class SqlScripts {
+    /*
+    sql scripts handled separately to avoid writing code prone to sql injection
+     */
     final String createClient =
             "INSERT INTO requested_customer (name, password, email, type)" +
             "VALUES (?, ?, ?, ?)";

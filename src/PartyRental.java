@@ -38,9 +38,6 @@ public class PartyRental {
     private Customer customer;
     Connection connection;
 
-    // TODO TEST adjust inventory according during reservations, cancellations and such
-    // TODO adjust paid in reservations as now its 0 even when items are returned
-
     PartyRental() throws SQLException {
         DriverManager.registerDriver(new Driver());
         connection = DriverManager.getConnection("jdbc:mariadb://localhost:3306/party_rental", "root", "123");
@@ -370,7 +367,6 @@ public class PartyRental {
     }
 
     private void recordRentOrder() {
-        // TODO ONLY if rentdate = today to sql script
         ArrayList<Reservation> reservations;
         try {
             reservations = getReservations(
@@ -1023,7 +1019,7 @@ public class PartyRental {
             float subtotal = resultSet.getFloat("subtotal");
 
             if(userType.equals("customerPay")) {
-                // employee is checking for todays reservation that needs to be rented but this check
+                // employee is checking for today's reservation that needs to be rented but this check
                 // skips reservations not fully paid
 
                 if(paid == subtotal+gst) {
@@ -1121,9 +1117,7 @@ public class PartyRental {
         JTextField[] fields = new JTextField[]{
                 name, expMM, expYY, sec
         };
-        back.addActionListener(e -> {
-            navigator.close();
-        });
+        back.addActionListener(e -> navigator.close());
         clearManyTexts(fields);
 
         submit.addActionListener(e -> {
@@ -1398,9 +1392,7 @@ public class PartyRental {
         placer2.vhPlacer(mDElements);
         JPanel container2 = placer2.getContainer();
         JButton pay = new JButton("Pay Remaining");
-        pay.addActionListener(e -> {
-            makePayment(reservation, reservation.getTotal() - reservation.getPaid(), "second");
-        });
+        pay.addActionListener(e -> makePayment(reservation, reservation.getTotal() - reservation.getPaid(), "second"));
         JButton deleteApprove;
         if(info.equals("make")) {
             deleteApprove = new JButton("Submit");
@@ -1608,7 +1600,6 @@ public class PartyRental {
     }
 
     private void recordReturnOrder() {
-        // TODO get return_date = today from db
 
         ArrayList<Reservation> reservations;
         try {
