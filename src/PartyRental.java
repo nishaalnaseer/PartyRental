@@ -20,20 +20,18 @@ import org.apache.commons.csv.CSVRecord;
 // json dependencies
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import java.io.FileReader;
-import java.io.IOException;
+import org.json.simple.JSONArray;
+
 
 // scraping dependencies
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 // GUI
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -62,13 +60,11 @@ public class PartyRental {
     private final Connection connection;
 
     PartyRental() throws SQLException {
-        Connection connection1;
         boolean exit = false;
-        System.out.println("ok");
 
-        String username;
-        String password;
-        String connectionString;
+        String username = "";
+        String password = "";
+        String connectionString = "";
 
         mainFrame.setSize(800, 700);
         mainFrame.setMinimumSize(new Dimension(700, 700));
@@ -76,7 +72,7 @@ public class PartyRental {
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         try {
-            FileReader fileReader = new FileReader("src/config.json");
+            FileReader fileReader = new FileReader("config/config.json");
             JSONObject jsonObject = (JSONObject) jsonParser.parse(fileReader);
 
             mastodonToken = (String) jsonObject.get("mastodon_token");
@@ -88,20 +84,17 @@ public class PartyRental {
 
             connectionString = "jdbc:mariadb://" + db_host + ":" + db_port + "/" + database;
 
-            DriverManager.registerDriver(new Driver());
-            connection1 = DriverManager.getConnection(connectionString, username, password);
-
             fileReader.close();
         } catch (IOException | org.json.simple.parser.ParseException e) {
             System.out.println("Error reading JSON file, exiting APP now");
             JOptionPane.showMessageDialog(mainFrame, "Error reading JSON file, exiting APP now");
             DriverManager.registerDriver(new Driver());
             e.printStackTrace();
-            connection1 = DriverManager.getConnection("jdbc:mariadb://");
             exit = true;
         }
 
-        connection = connection1;
+        DriverManager.registerDriver(new Driver());
+        connection = DriverManager.getConnection(connectionString, username, password);
         mainFrame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e)  {
                 try {
@@ -148,7 +141,7 @@ public class PartyRental {
 
         JLabel label = new JLabel("Sign In");
         label.setHorizontalAlignment(SwingConstants.CENTER);
-        JTextField usernameField = new JTextField("nishawl.naseer1@outlook.com");
+        JTextField usernameField = new JTextField("nishawl.naseer2@outlook.com");
         JPasswordField passwordField = new JPasswordField("123");
         JButton loginButton = new JButton("Login");
         JButton createAccount = new JButton("Create Account");
@@ -1680,7 +1673,7 @@ public class PartyRental {
         JButton sales = new JButton("Sales Report");
         JButton inventory = new JButton("Inventory Management");
         JButton importData = new JButton("Import Data");
-        JButton twitterScrape = new JButton("Search Twitter");
+        JButton mastodonScrape = new JButton("Search Mastodon");
 
         management.addActionListener(e -> userManagement());
         inventory.addActionListener(e -> inventoryManagement());
@@ -1688,6 +1681,7 @@ public class PartyRental {
             boolean[] loadedArray = {false};
             loadDataFiles("", loadedArray);
         });
+        mastodonScrape.addActionListener(e -> mastodonSearch());
 
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {
@@ -1695,7 +1689,7 @@ public class PartyRental {
                 sales, getPadding(10, 5),
                 inventory, getPadding(10, 5),
                 importData, getPadding(10, 5),
-                twitterScrape, getPadding(10, 5),
+                mastodonScrape, getPadding(10, 5),
                 logout
         };
         placer.verticalPlacer(elements);
@@ -2529,45 +2523,138 @@ public class PartyRental {
         return formatter.format(date);
     }
 
-    public static void mastodonSearch(String[] args) {
-        String accessToken = "EAAIwZCKKKPrcBOZCZBEUaXFn1U5WHre3kjuY7BjUd32kXZBNWG7qKPBLIltBERVZBcG8mgPLJ2Eqxx8UYTKbJvwyh3UOrfNXBX0muRNrcJ4g0hZAmCALncpBmEml2MTB4XLGgE1yLpWSZBd63weDhfTL3QWj4iZCy1355eklrgzWDugZAaXCjpkXZAQqjCtnhacP12MBLXbKdcCllwMouNQAZDZD";
-        String phraseToSearch = "YOUR_SEARCH_PHRASE";
-        String region = "YOUR_REGION"; // Example: "New York, NY"
+    private void mastodonSearch() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        JButton search = new JButton("Search");
+        JTextField field = new JTextField("Phrase");
+
+        clearTextField(field);
+
+        search.addActionListener(e -> searched(field.getText()));
+
+        GuiPlacer placer = new GuiPlacer(400, 500);
+        Component[] elements = {
+                field, getPadding(10, 5),
+                search, getPadding(10, 5),
+                back
+        };
+        placer.verticalPlacer(elements);
+        JPanel container = placer.getContainer();
+
+        panel.add(container);
+        navigator.open(panel, "mastodonSearch");
+    }
+
+    private void searched(String phrase) {
+        JPanel panel = new JPanel(new GridBagLayout());
+
+        String urlString = "https://mastodonapp.uk/api/v2/search?q=" + phrase;
+        StringBuilder response;
 
         try {
-            // Encode the search phrase and region to be used in the API request
-            String encodedPhrase = URLEncoder.encode(phraseToSearch, StandardCharsets.UTF_8.toString());
-            String encodedRegion = URLEncoder.encode(region, StandardCharsets.UTF_8.toString());
-
-            // Construct the API request URL with the search parameters
-            String apiEndpoint = "https://graph.facebook.com/v13.0/search";
-            String fields = "message"; // You can add more fields to retrieve additional information from the posts
-            String apiRequestURL = apiEndpoint + "?q=" + encodedPhrase + "&type=post&fields=" + fields +
-                    "&limit=10&center=" + encodedRegion + "&distance=1000" + "&access_token=" + accessToken;
-
-            URL url = new URL(apiRequestURL);
+            URL url = new URL(urlString);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
 
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                String inputLine;
-                StringBuffer response = new StringBuffer();
+            connection.setRequestProperty("Authorization", "Bearer " + mastodonToken);
 
-                while ((inputLine = reader.readLine()) != null) {
+            int responseCode = connection.getResponseCode();
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
                 }
-                reader.close();
-
-                // Process the JSON response here
-                System.out.println(response.toString());
+                in.close();
             } else {
-                System.out.println("Error: Unable to fetch data. Response code: " + responseCode);
+                JOptionPane.showMessageDialog(mainFrame, "GET request failed. Response Code: " + responseCode);
+                return;
             }
         } catch (IOException e) {
+            JOptionPane.showMessageDialog(mainFrame, "Unknown Error: " + e.getMessage());
             e.printStackTrace();
+            return;
         }
+
+        JSONParser parser = new JSONParser();
+        JSONObject jsonObject;
+
+        try {
+            jsonObject = (JSONObject) parser.parse(response.toString());
+        } catch (org.json.simple.parser.ParseException e) {
+            JOptionPane.showMessageDialog(mainFrame, "Unknown Error: " + e.getMessage());
+            return;
+        }
+
+        JSONArray accountsArray = (JSONArray) jsonObject.get("accounts");
+        ArrayList<JPanel> panels = new ArrayList<>();
+        for (Object accountObj : accountsArray) {
+            JSONObject account = (JSONObject) accountObj;
+
+            String note = (String) account.get("note");
+            String display_name = (String) account.get("display_name");
+            String time = (String) account.get("created_at");
+            panels.add(post(display_name, note, time));
+        }
+
+        JComponent[] elements = new JComponent[panels.size() + 1];
+        for (int x = 0; x < panels.size(); x++) {
+            elements[x] = panels.get(x);
+        }
+        JButton back = new JButton("Back");
+        back.addActionListener(e -> navigator.close());
+        elements[panels.size()] = back;
+
+        JPanel table = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        gbc.gridy = 0;
+
+        for(int y = 0; y < elements.length; y++) {
+            gbc.gridy++;
+            table.add(elements[y], gbc);
+        }
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
+        scrollBar.setUnitIncrement(scrollBar.getUnitIncrement() * 8);
+        scrollPane.setPreferredSize(new Dimension(700, 700));
+        scrollPane.setMinimumSize(new Dimension(700, 700));
+        scrollPane.setViewportView(table);
+
+        panel.add(scrollPane);
+
+        navigator.open(panel, "mastodonSearch");
+    }
+
+    private JPanel post(String username, String text, String time) {
+        JPanel panel = new JPanel(new BorderLayout());
+
+        JLabel usernameLabel = new JLabel("Username: " + username);
+        JLabel textLabel = new JLabel("<html>" + text + "</html>");
+        JLabel timeLabel = new JLabel("Time: " + time);
+
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BorderLayout());
+        contentPanel.add(usernameLabel, BorderLayout.NORTH);
+        contentPanel.add(textLabel, BorderLayout.CENTER);
+
+        JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        infoPanel.add(timeLabel);
+
+        panel.add(contentPanel, BorderLayout.CENTER);
+        panel.add(infoPanel, BorderLayout.SOUTH);
+        Border border = BorderFactory.createLineBorder(Color.BLACK, 1);
+        panel.setBorder(BorderFactory.createCompoundBorder(border, BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        panel.setMinimumSize(new Dimension(500, 100));
+        panel.setPreferredSize(new Dimension(500, 400));
+        panel.setMaximumSize(new Dimension(500, 1000));
+
+        return panel;
     }
 
 
