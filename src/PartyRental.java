@@ -64,6 +64,7 @@ public class PartyRental {
     PartyRental() throws SQLException {
         Connection connection1;
         boolean exit = false;
+        System.out.println("ok");
 
         String username;
         String password;
