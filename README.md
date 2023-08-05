@@ -2,6 +2,10 @@
 
 ##### Second year java project with mariadb
 
+#
+## Content
+#
+
 ## Getting Started
 #### I recommend using the versions and applications mentioned below. Why do I recommend HeidiSQL? Because the DB was created using HeidiSQL, as that is faster and more reliable, and exported as SQL. I have once tried running such exported SQL before, but I encountered an error, therefore I recommend using HeidiSQL for DB setup.
 #### Once HeidiSQL is installed copy init.sql and paste it into a query tab before hitting run.
@@ -28,3 +32,7 @@
 ### Apache Commons CSV (CSV Parser)
 ```1.10.0```
 #### Get Apache Commons CSV from [here](https://dlcdn.apache.org//commons/csv/binaries/)
+
+### JSON SIMPLE (JSON Parser)
+```1.1```
+#### Get json-simple from [here](https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/json-simple/json_simple-1.1.jar)

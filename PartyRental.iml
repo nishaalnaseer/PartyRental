@@ -31,5 +31,14 @@
         <jarDirectory url="file://D:/Misc/dev_prod/jars/commons-csv-1.10.0" recursive="false" type="SOURCES" />
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://D:/Misc/dev_prod/jars/json_simple-1.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

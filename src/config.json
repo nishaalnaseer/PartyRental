@@ -1,0 +1,9 @@
+{
+  "mastodon_token": "token",
+
+  "db_host": "localhost",
+  "db_port": 3306,
+  "database": "party_rental",
+  "username": "username",
+  "password": "password"
+}

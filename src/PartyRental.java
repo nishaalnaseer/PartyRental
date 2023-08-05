@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-// csv parser
+// csv dependencies
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
@@ -17,14 +17,33 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+// json dependencies
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import java.io.FileReader;
+import java.io.IOException;
+
+// scraping dependencies
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+// GUI
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+
+// others
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 import java.time.LocalDate;
 import java.time.ZoneId;
+
 
 public class PartyRental {
 
@@ -34,13 +53,54 @@ public class PartyRental {
     private final JButton back = new JButton("Back");
     private final JButton logout = new JButton("Logout");
     private final SqlScripts scripts = new SqlScripts();
+
+    private final JSONParser jsonParser = new JSONParser();
+    private String mastodonToken;
+
     private Employee employee;
     private Customer customer;
-    Connection connection;
+    private final Connection connection;
 
     PartyRental() throws SQLException {
-        DriverManager.registerDriver(new Driver());
-        connection = DriverManager.getConnection("jdbc:mariadb://localhost:3306/party_rental", "root", "123");
+        Connection connection1;
+        boolean exit = false;
+
+        String username;
+        String password;
+        String connectionString;
+
+        mainFrame.setSize(800, 700);
+        mainFrame.setMinimumSize(new Dimension(700, 700));
+        mainFrame.getContentPane().setLayout(cardLayout);
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        try {
+            FileReader fileReader = new FileReader("src/config.json");
+            JSONObject jsonObject = (JSONObject) jsonParser.parse(fileReader);
+
+            mastodonToken = (String) jsonObject.get("mastodon_token");
+            String db_host = (String) jsonObject.get("db_host");
+            long db_port = (long) jsonObject.get("db_port");
+            String database = (String) jsonObject.get("database");
+            username = (String) jsonObject.get("username");
+            password = (String) jsonObject.get("password");
+
+            connectionString = "jdbc:mariadb://" + db_host + ":" + db_port + "/" + database;
+
+            DriverManager.registerDriver(new Driver());
+            connection1 = DriverManager.getConnection(connectionString, username, password);
+
+            fileReader.close();
+        } catch (IOException | org.json.simple.parser.ParseException e) {
+            System.out.println("Error reading JSON file, exiting APP now");
+            JOptionPane.showMessageDialog(mainFrame, "Error reading JSON file, exiting APP now");
+            DriverManager.registerDriver(new Driver());
+            e.printStackTrace();
+            connection1 = DriverManager.getConnection("jdbc:mariadb://");
+            exit = true;
+        }
+
+        connection = connection1;
         mainFrame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e)  {
                 try {
@@ -49,12 +109,12 @@ public class PartyRental {
                     throw new RuntimeException(ex);
                 }
             }
-        } );
+        });
 
-        mainFrame.setSize(800, 700);
-        mainFrame.setMinimumSize(new Dimension(700, 700));
-        mainFrame.getContentPane().setLayout(cardLayout);
-        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        if (exit) {
+            // exit if json doesnt read
+            return;
+        }
 
         loginPage();
         
@@ -2467,6 +2527,48 @@ public class PartyRental {
         SimpleDateFormat formatter = new SimpleDateFormat(format);
         return formatter.format(date);
     }
+
+    public static void mastodonSearch(String[] args) {
+        String accessToken = "EAAIwZCKKKPrcBOZCZBEUaXFn1U5WHre3kjuY7BjUd32kXZBNWG7qKPBLIltBERVZBcG8mgPLJ2Eqxx8UYTKbJvwyh3UOrfNXBX0muRNrcJ4g0hZAmCALncpBmEml2MTB4XLGgE1yLpWSZBd63weDhfTL3QWj4iZCy1355eklrgzWDugZAaXCjpkXZAQqjCtnhacP12MBLXbKdcCllwMouNQAZDZD";
+        String phraseToSearch = "YOUR_SEARCH_PHRASE";
+        String region = "YOUR_REGION"; // Example: "New York, NY"
+
+        try {
+            // Encode the search phrase and region to be used in the API request
+            String encodedPhrase = URLEncoder.encode(phraseToSearch, StandardCharsets.UTF_8.toString());
+            String encodedRegion = URLEncoder.encode(region, StandardCharsets.UTF_8.toString());
+
+            // Construct the API request URL with the search parameters
+            String apiEndpoint = "https://graph.facebook.com/v13.0/search";
+            String fields = "message"; // You can add more fields to retrieve additional information from the posts
+            String apiRequestURL = apiEndpoint + "?q=" + encodedPhrase + "&type=post&fields=" + fields +
+                    "&limit=10&center=" + encodedRegion + "&distance=1000" + "&access_token=" + accessToken;
+
+            URL url = new URL(apiRequestURL);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+
+                while ((inputLine = reader.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                reader.close();
+
+                // Process the JSON response here
+                System.out.println(response.toString());
+            } else {
+                System.out.println("Error: Unable to fetch data. Response code: " + responseCode);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public static void main(String[] args) throws SQLException {
         new PartyRental();
