@@ -29,4 +29,5 @@ bin/
 .DS_Store
 
 # avoid uploading tokens and credentials to github since this repor will be public
+config/*
 /config/
