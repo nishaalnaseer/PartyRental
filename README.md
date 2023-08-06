@@ -36,3 +36,7 @@
 ### JSON SIMPLE (JSON Parser)
 ```1.1```
 #### Get json-simple from [here](https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/json-simple/json_simple-1.1.jar)
+
+### JFree (GUI charts)
+```1.54```
+#### Get JFree from [here](https://mvnrepository.com/artifact/org.jfree/jfreechart/1.5.4)

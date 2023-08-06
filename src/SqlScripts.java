@@ -133,8 +133,6 @@ public class SqlScripts {
     final String approveReservation =
             "UPDATE reservation SET status = 'RESERVED', approved_by = ? WHERE id = ?";
 
-    // TODO the below script is before for reservation status changes to RENTED so add
-    //  rent_date = today() to the script
     final String selectReservedReservations =
             "SELECT * FROM reservation WHERE status = 'RESERVED'";
 
@@ -147,10 +145,8 @@ public class SqlScripts {
     final String setReturned =
             "UPDATE reservation SET status = 'RETURNED', return_accepted_by = ? WHERE id = ?";
 
-    // TODO the below script is before for reservation status changes to RETURNED so add
-    //  return_date = today() to the script
     final String selectRentedReservations =
-            "SELECT * FROM reservation WHERE status = 'RENTED'";
+            "SELECT * FROM reservation WHERE status = 'RENTED' AND return_date = CURDATE()";
 
     final String selectItem =
             "SELECT * FROM item WHERE id = ?";
@@ -167,4 +163,17 @@ public class SqlScripts {
 
     final String updateReservationPayment =
             "UPDATE reservation SET paid = ? WHERE id = ?";
+
+    final String reservationsReport =
+            "SELECT reservation_date, rent_date, return_date FROM reservation\n" +
+                    "WHERE reservation_date >= DATE_SUB(NOW(), INTERVAL 6 MONTH);";
+
+    final String customerTypeReport =
+            "SELECT `customer`.`type`, `reservation`.`reservation_date` FROM `reservation`" +
+            "INNER JOIN `customer`" +
+            "ON `customer`.`id` = `reservation`.`customer`" +
+            "WHERE `reservation`.`reservation_date` >= DATE_SUB(NOW(), INTERVAL 6 MONTH);";
+
+    final String selectReturnedReservations =
+            "SELECT * FROM reservation WHERE status = 'RETURNED'";
 }

@@ -1,5 +1,8 @@
 // sql and db
 import java.sql.*;
+
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.mariadb.jdbc.Driver;
 
 // hashing
@@ -34,6 +37,11 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.*;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
 
 // others
 import java.text.SimpleDateFormat;
@@ -54,6 +62,7 @@ public class PartyRental {
 
     private final JSONParser jsonParser = new JSONParser();
     private String mastodonToken;
+    private String mastodonServer;
 
     private Employee employee;
     private Customer customer;
@@ -76,6 +85,7 @@ public class PartyRental {
             JSONObject jsonObject = (JSONObject) jsonParser.parse(fileReader);
 
             mastodonToken = (String) jsonObject.get("mastodon_token");
+            mastodonServer = (String) jsonObject.get("mastodon_server");
             String db_host = (String) jsonObject.get("db_host");
             long db_port = (long) jsonObject.get("db_port");
             String database = (String) jsonObject.get("database");
@@ -123,6 +133,9 @@ public class PartyRental {
     }
 
     private String sha256(String input) {
+        /*
+        get sha256 hash of input
+         */
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] hash = md.digest(input.getBytes(StandardCharsets.UTF_8));
@@ -137,6 +150,9 @@ public class PartyRental {
     }
 
     private void loginPage() {
+        /*
+        display login page
+         */
         JPanel panel = new JPanel(new GridBagLayout());
 
         JLabel label = new JLabel("Sign In");
@@ -225,6 +241,9 @@ public class PartyRental {
     }
 
     private void clearTextField(JTextField textField) {
+        /*
+        clear a text field when clicked on
+         */
         textField.addMouseListener(new MouseAdapter() {
             private boolean reset = true;
             @Override
@@ -239,6 +258,9 @@ public class PartyRental {
     }
 
     private void clearPasswordField(JPasswordField passwordField) {
+        /*
+        clear a password field when clicked on
+         */
         passwordField.addMouseListener(new MouseAdapter() {
             private boolean reset = true;
             @Override
@@ -253,17 +275,26 @@ public class PartyRental {
     }
 
     private void clearPasswordTextFields(JTextField textField, JPasswordField passwordField) {
+        /*
+        Clear a text and password field when clicked on
+         */
         clearTextField(textField);
         clearPasswordField(passwordField);
     }
 
     private void clearManyTexts(JTextField[] textFields) {
+        /*
+        enter an array of textfield, when clicked on they will clear themselves when first
+        clicked on
+         */
         for (JTextField textField : textFields) {
             clearTextField(textField);
         }
     }
 
     private boolean checkUser(String[] scripts, String username) {
+        /* check if user is on db
+        * */
         for(String script : scripts) {
             try {
                 // Create a prepared statement object
@@ -284,6 +315,9 @@ public class PartyRental {
     }
 
     private boolean validateCredentials(String[] texts, String username, String password) {
+        /*
+        validate user credentials
+         */
         for (String text : texts) {
             if(text.isBlank()) {
                 JOptionPane.showMessageDialog(mainFrame, "Invalid Option");
@@ -298,6 +332,9 @@ public class PartyRental {
     }
 
     private void customerAccountCreation() {
+        /*
+        customer account creation page
+         */
         JPanel panel = new JPanel(new GridBagLayout());
 
         JLabel label = new JLabel("Account Creation Request");
@@ -378,6 +415,9 @@ public class PartyRental {
     }
 
     private JLabel getPadding(int width, int height) {
+        /*
+        a 'padding' which is actually a Jlabel
+         */
         JLabel padding = new JLabel();
         padding.setPreferredSize(new Dimension(width, height));
         padding.setMinimumSize(new Dimension(width, height));
@@ -386,22 +426,29 @@ public class PartyRental {
     }
 
     private void officerPage() {
+        /*
+        display officers page
+         */
         JPanel panel = new JPanel(new GridBagLayout());
         JButton makeReservationButton = new JButton("Make Reservation");
         JButton viewReservationButton = new JButton("View Reservations");
         JButton registrations = new JButton("Approve Registrations");
         JButton returnOrder = new JButton("Return Order");
         JButton rentOrder = new JButton("Rent Order");
+        JButton returns = new JButton("Returns");
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {
-                registrations, getPadding(5, 5),
-                viewReservationButton, getPadding(5, 5),
-                rentOrder, getPadding(5, 5),
-                returnOrder, getPadding(5, 5),
-                logout
+            registrations, getPadding(5, 5),
+            viewReservationButton, getPadding(5, 5),
+            rentOrder, getPadding(5, 5),
+            returnOrder, getPadding(5, 5),
+            returns, getPadding(5, 5),
+            logout
         };
         placer.verticalPlacer(elements);
         JPanel container = placer.getContainer();
+
+        returns.addActionListener(e -> viewCompletedReservations());
 
         HashMap<String, Integer> itemsForReservation = new HashMap<>();
         Object[] selectedStartDate = new String[]{"Select Day", "Select Month", "Select Year"};
@@ -421,6 +468,9 @@ public class PartyRental {
     }
 
     private void recordRentOrder() {
+        /*
+        recording rent order page
+         */
         ArrayList<Reservation> reservations;
         try {
             reservations = getReservations(
@@ -520,11 +570,19 @@ public class PartyRental {
     }
 
     public void delRequestedClient(int id) throws SQLException {
+        /*
+        if a requested customers account creation form is not up to standard
+        and an employee rejects it, this can be called to delete that entry from db
+        this is done so the user can request again without any issues
+         */
         Object[] values = new Object[]{id};
         valuedQuery(scripts.delRequestClient, values);
     }
 
     private void customerApproveReject(Customer customer) {
+        /*
+        display page to reject or approve a customers account creation
+         */
         int idRaw = customer.getClientId();
         String type = customer.getType();
         String customerName = customer.getName();
@@ -600,6 +658,9 @@ public class PartyRental {
     }
 
     private void rentingReservation() {
+        /*
+        display reservations with RESERVED status
+         */
 
         ArrayList<Reservation> reservations;
         try {
@@ -614,6 +675,9 @@ public class PartyRental {
     }
 
     private void customerPage() {
+        /*
+        display customer page
+         */
         JPanel panel = new JPanel();
         JButton makeReservationButton = new JButton("Make Reservation");
         JButton viewReservationButton = new JButton("View Reservations");
@@ -648,6 +712,9 @@ public class PartyRental {
 
     private void dateFormatter(HashMap<String, Integer> itemsForReservation, DatePicker datePicker1,
                                DatePicker datePicker2, Item item, String userType, Integer amount, float finalGstValue) {
+        /*
+        date objects is inserted into gui and before reservation it can be read
+         */
         String startDateRaw = datePicker1.getDate();
         String endDateRaw = datePicker2.getDate();
         Date start;
@@ -678,6 +745,10 @@ public class PartyRental {
     }
 
     private float getGst(String userType, String cType) throws SQLException {
+        /*
+        get the gst of a customer type
+
+         */
         Object[] values;
         if(userType.equals("customer")) {
             values = new Object[]{customer.getType()};
@@ -692,10 +763,14 @@ public class PartyRental {
         return gstValue;
     }
 
-    private void createReservation(HashMap<String, Integer> itemsForReservation, float gstValue, long days,
-                                   Object[] selectedStartDate, Object[] selectedEndDate, String userType
+    private void createReservation(
+            HashMap<String, Integer> itemsForReservation, float gstValue, long days,
+            Object[] selectedStartDate, Object[] selectedEndDate, String userType
 
     ) {
+        /*
+        display create a reservation page
+         */
         JPanel panel = new JPanel(new GridBagLayout());
         HashMap<String, Item> items;
 
@@ -941,6 +1016,9 @@ public class PartyRental {
     }
 
     private void deletingReservation(Reservation reservation, String userType) throws SQLException {
+        /*
+        delete a reservatition
+         */
         String script;
 
         switch (userType) {
@@ -1046,6 +1124,9 @@ public class PartyRental {
     }
 
     private Customer makeCustomer(ResultSet resultSet) throws SQLException {
+        /*
+        get a customer from db result
+         */
         int id = resultSet.getInt("id");
         String name = resultSet.getString("name");
         String password = resultSet.getString("password");
@@ -1057,6 +1138,9 @@ public class PartyRental {
     }
 
     ArrayList<Reservation> getReservations(String script, Object[] values, String userType) throws SQLException {
+        /*
+        get reservations from db
+         */
 
         ResultSet resultSet = valuedQuery(script, values);
         ArrayList<Reservation> reservations = new ArrayList<>();
@@ -1159,6 +1243,9 @@ public class PartyRental {
     }
 
     private void makePayment(Reservation reservation, float amount, String time) {
+        /*
+        display payment screen
+         */
         JPanel panel = new JPanel(new GridBagLayout());
         // todo check if card expired?
 
@@ -1304,12 +1391,12 @@ public class PartyRental {
 
         GuiPlacer guiPlacer = new GuiPlacer(400, 500);
         JComponent[] elements = new JComponent[]{
-                name, getPadding(400, 5),
-                expMM, getPadding(400, 5),
-                expYY, getPadding(400, 5),
-                sec, getPadding(400, 5),
-                submit, getPadding(400, 5),
-                back
+            name, getPadding(400, 5),
+            expMM, getPadding(400, 5),
+            expYY, getPadding(400, 5),
+            sec, getPadding(400, 5),
+            submit, getPadding(400, 5),
+            back
         };
         guiPlacer.verticalPlacer(elements);
         JPanel container = guiPlacer.getContainer();
@@ -1654,6 +1741,9 @@ public class PartyRental {
     }
 
     private void recordReturnOrder() {
+        /*
+        display record return order screen
+         */
 
         ArrayList<Reservation> reservations;
         try {
@@ -1668,6 +1758,9 @@ public class PartyRental {
     }
 
     private void adminPage() {
+        /*
+        display admin page
+         */
         JPanel panel = new JPanel(new GridBagLayout());
         JButton management = new JButton("User Management");
         JButton sales = new JButton("Sales Report");
@@ -1676,6 +1769,7 @@ public class PartyRental {
         JButton mastodonScrape = new JButton("Search Mastodon");
 
         management.addActionListener(e -> userManagement());
+        sales.addActionListener(e -> salesReportOption());
         inventory.addActionListener(e -> inventoryManagement());
         importData.addActionListener(e -> {
             boolean[] loadedArray = {false};
@@ -1700,6 +1794,9 @@ public class PartyRental {
     }
 
     private void addUser() {
+        /*
+        display add user page
+         */
         JPanel panel = new JPanel(new GridBagLayout());
         JComboBox<Role> role = new JComboBox<>(Role.values());
         JPanel heading = new JPanel();
@@ -1765,6 +1862,9 @@ public class PartyRental {
     }
 
     private void removeUser(){
+        /*
+        display remove user page
+         */
         JPanel table = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         table.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -1812,6 +1912,9 @@ public class PartyRental {
     }
 
     private void displayUsers(String script, JPanel table, GridBagConstraints gbc) {
+        /*
+        display users page
+         */
         ResultSet resultSet;
         try {
             resultSet = noValueQuery(script);
@@ -1880,11 +1983,17 @@ public class PartyRental {
     }
 
     private String dateToDB(Date date) {
+        /*
+        turn date from db to string
+         */
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         return dateFormat.format(date);
     }
 
     private String getEntries(String script, Object[] values) {
+        /*
+        get the number of rows of a script on db
+         */
         try {
             ResultSet rs = valuedQuery(script, values);
             int rowCount = 0;
@@ -1899,6 +2008,9 @@ public class PartyRental {
     }
 
     private void userManagement() {
+        /*
+        display user management page
+         */
         Object[] values = {"REQUESTED"};
         String pending = getEntries(scripts.getPendingClients, values);
         values = new Object[]{"ENABLED"};
@@ -1954,6 +2066,9 @@ public class PartyRental {
     }
 
     private void inventoryManagement() {
+        /*
+        dispaly inventory management screen
+         */
         JButton add = new JButton("Add Item");
         JButton adjust = new JButton("Adjust Inventory");
         JButton back = new JButton("Back");
@@ -2038,6 +2153,9 @@ public class PartyRental {
     }
 
     private void addItem() {
+        /*
+        add item screen
+         */
         JPanel panel = new JPanel(new GridBagLayout());
 
         JTextField description = new JTextField("Description");
@@ -2120,6 +2238,9 @@ public class PartyRental {
     }
 
     private HashMap<String, Item> dbToHashMap(boolean num) throws SQLException {
+        /*
+        items in db to hashmap
+         */
         ResultSet data = noValueQuery(scripts.getItems);
         HashMap<String, Item> map = new HashMap<>();
 
@@ -2149,6 +2270,9 @@ public class PartyRental {
     }
 
     private ArrayList<Object[]> csvToList(String filePath) throws IOException {
+        /*
+        items in csv file to arraylist
+         */
         FileReader fileReader = new FileReader(filePath);
         CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader();
         CSVParser csvParser = new CSVParser(fileReader, csvFormat);
@@ -2181,6 +2305,9 @@ public class PartyRental {
     }
 
     private void loadDataFiles(String csvFile, boolean[] loadedArray) {
+        /*
+        load csv file page
+         */
         JPanel panel = new JPanel(new GridBagLayout());
         HashMap<String, Item> items;
 //        final boolean[] loadedArray = {false};
@@ -2307,6 +2434,9 @@ public class PartyRental {
     }
 
     private JScrollPane scrollTable(JPanel table, int width, int height) {
+        /*
+        get a scroll table
+         */
         JScrollPane scrollPane = new JScrollPane(table);
         JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
         scrollBar.setUnitIncrement(scrollBar.getUnitIncrement() * 8);
@@ -2320,6 +2450,9 @@ public class PartyRental {
     private void itemTable(JPanel table, GridBagConstraints tableGbc, String heading,
             HashMap<String, Item> items, boolean loaded
             ) {
+        /*
+        edit item table
+         */
 
         tableGbc.gridy++;
         tableGbc.gridx=1;
@@ -2380,6 +2513,9 @@ public class PartyRental {
     }
 
     private void editItem(Item item) {
+        /*
+        edit item page
+         */
         JPanel panel = new JPanel(new GridBagLayout());
 
         JLabel id = new JLabel("ID: " + item.getId());
@@ -2447,6 +2583,9 @@ public class PartyRental {
     }
 
     private void viewItems() {
+        /*
+        view items page
+         */
         JPanel panel = new JPanel(new GridBagLayout());
 
         HashMap<String, Item> items;
@@ -2524,6 +2663,9 @@ public class PartyRental {
     }
 
     private void mastodonSearch() {
+        /*
+        mastodon search page
+         */
         JPanel panel = new JPanel(new GridBagLayout());
         JButton search = new JButton("Search");
         JTextField field = new JTextField("Phrase");
@@ -2546,9 +2688,12 @@ public class PartyRental {
     }
 
     private void searched(String phrase) {
+        /*
+        mastodon searched page, display results
+         */
         JPanel panel = new JPanel(new GridBagLayout());
 
-        String urlString = "https://mastodonapp.uk/api/v2/search?q=" + phrase;
+        String urlString = mastodonServer + "/api/v2/search?q=" + phrase;
         StringBuilder response;
 
         try {
@@ -2579,11 +2724,10 @@ public class PartyRental {
             return;
         }
 
-        JSONParser parser = new JSONParser();
         JSONObject jsonObject;
 
         try {
-            jsonObject = (JSONObject) parser.parse(response.toString());
+            jsonObject = (JSONObject) jsonParser.parse(response.toString());
         } catch (org.json.simple.parser.ParseException e) {
             JOptionPane.showMessageDialog(mainFrame, "Unknown Error: " + e.getMessage());
             return;
@@ -2632,6 +2776,9 @@ public class PartyRental {
     }
 
     private JPanel post(String username, String text, String time) {
+        /*
+        format a post into a Jpanel
+         */
         JPanel panel = new JPanel(new BorderLayout());
 
         JLabel usernameLabel = new JLabel("Username: " + username);
@@ -2657,6 +2804,231 @@ public class PartyRental {
         return panel;
     }
 
+    private void salesReportOption() {
+        /*
+        sales report page
+         */
+        JPanel panel = new JPanel(new GridBagLayout());
+
+        JButton button = new JButton("Generate");
+        String[] types = {"Customer Type", "Reservations"};
+        JComboBox<String> type = new JComboBox<>(types);
+        button.addActionListener(e -> generateReport((String) Objects.requireNonNull(type.getSelectedItem())));
+
+        GuiPlacer placer = new GuiPlacer(400, 500);
+        Component[] elements = {
+                type, getPadding(10, 5),
+                button, getPadding(10, 5),
+                back
+        };
+        placer.verticalPlacer(elements);
+        JPanel container = placer.getContainer();
+
+        panel.add(container);
+        navigator.open(panel, "mastodonSearch");
+    }
+
+    private void generateReport(String type) {
+        /*
+        generate report depending on type
+         */
+        if (type.equals("Customer Type")) {
+            customersReport();
+        } else {
+            reservationsReport();
+        }
+    }
+
+    private void customersReport() {
+        /*
+        customers report page
+         */
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        SimpleDateFormat monthFormat = new SimpleDateFormat("MMM yyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+        ResultSet rs;
+        try {
+            rs = noValueQuery(scripts.customerTypeReport);
+
+            HashMap<String, Integer> countDom = new HashMap<>();
+            HashMap<String, Integer> countGov = new HashMap<>();
+            HashMap<String, Integer> countDip = new HashMap<>();
+            HashMap<String, Integer> countPriv = new HashMap<>();
+            HashMap<String, Integer> countRes = new HashMap<>();
+
+            while (rs.next()) {
+                Date reservationDate = dateFormat.parse(rs.getString("reservation_date"));
+                int typeID = Integer.parseInt(rs.getString("type"));
+                String month = monthFormat.format(reservationDate);
+
+                switch (typeID) {
+                    case 1:
+                        accumulateData(countDom, month);
+                        break;
+                    case 2:
+                        accumulateData(countGov, month);
+                        break;
+                    case 3:
+                        accumulateData(countDip, month);
+                        break;
+                    case 4:
+                        accumulateData(countPriv, month);
+                        break;
+                    case 5:
+                        accumulateData(countRes, month);
+                        break;
+                    default:
+                        JOptionPane.showMessageDialog(mainFrame, "Error reading SQL1");
+                        return;
+                }
+            }
+
+            addDataToDataset(dataset, countDom, "DOMESTIC");
+            addDataToDataset(dataset, countGov, "GOVERNMENT");
+            addDataToDataset(dataset, countDip, "DIPLOMATIC");
+            addDataToDataset(dataset, countPriv, "PRIVATE");
+            addDataToDataset(dataset, countRes, "RESORTS");
+
+        } catch (java.sql.SQLException e) {
+            JOptionPane.showMessageDialog(mainFrame, "SQL Error");
+            return;
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+
+        JFreeChart chart = ChartFactory.createLineChart(
+            "Reservation Activity by Month and Customer Type",
+            "Month",
+            "Count",
+            dataset,
+            PlotOrientation.VERTICAL,
+            true,
+            true,
+            false
+        );
+
+        CategoryPlot plot = chart.getCategoryPlot();
+        LineAndShapeRenderer renderer = new LineAndShapeRenderer();
+        plot.setRenderer(renderer);
+        renderer.setSeriesPaint(0, Color.RED);
+        renderer.setSeriesPaint(1, Color.GREEN);
+        renderer.setSeriesPaint(2, Color.BLUE);
+        plot.setRenderer(renderer);
+
+        ChartPanel chartPanel = new ChartPanel(chart);
+        JPanel panel = new JPanel();
+        panel.setLayout(new java.awt.BorderLayout());
+        panel.add(chartPanel, BorderLayout.CENTER);
+        panel.add(back, BorderLayout.SOUTH);
+        panel.validate();
+
+        navigator.open(panel, "reservationsReport");
+    }
+
+    private void reservationsReport() {
+        /*
+        reservations report page
+         */
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        SimpleDateFormat monthFormat = new SimpleDateFormat("MMM yyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+        ResultSet rs;
+        try {
+            rs = noValueQuery(scripts.reservationsReport);
+
+            HashMap<String, Integer> reservations = new HashMap<>();
+            HashMap<String, Integer> rents = new HashMap<>();
+            HashMap<String, Integer> returns = new HashMap<>();
+
+            while (rs.next()) {
+                Date reservationDate = dateFormat.parse(rs.getString("reservation_date"));
+                Date rentDate = dateFormat.parse(rs.getString("rent_date"));
+                Date returnDate = dateFormat.parse(rs.getString("return_date"));
+
+                String reservationMonth = monthFormat.format(reservationDate);
+                String rentMonth = monthFormat.format(rentDate);
+                String returnMonth = monthFormat.format(returnDate);
+
+                accumulateData(reservations, reservationMonth);
+                accumulateData(rents, rentMonth);
+                accumulateData(returns, returnMonth);
+            }
+
+            addDataToDataset(dataset, reservations, "Reservations");
+            addDataToDataset(dataset, rents, "Rents");
+            addDataToDataset(dataset, returns, "Returns");
+
+        } catch (java.sql.SQLException e) {
+            JOptionPane.showMessageDialog(mainFrame, "SQL Error");
+            return;
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+
+        JFreeChart chart = ChartFactory.createLineChart(
+                "Reservation Activity by Month",
+                "Month",
+                "Count",
+                dataset,
+                PlotOrientation.VERTICAL,
+                true,
+                true,
+                false
+        );
+
+        CategoryPlot plot = chart.getCategoryPlot();
+        LineAndShapeRenderer renderer = new LineAndShapeRenderer();
+        plot.setRenderer(renderer);
+        renderer.setSeriesPaint(0, Color.RED);
+        renderer.setSeriesPaint(1, Color.GREEN);
+        renderer.setSeriesPaint(2, Color.BLUE);
+        plot.setRenderer(renderer);
+
+        ChartPanel chartPanel = new ChartPanel(chart);
+        JPanel panel = new JPanel();
+        panel.setLayout(new java.awt.BorderLayout());
+        panel.add(chartPanel, BorderLayout.CENTER);
+        panel.add(back, BorderLayout.SOUTH);
+        panel.validate();
+
+        navigator.open(panel, "reservationsReport");
+    }
+
+    private void accumulateData(Map<String, Integer> dataMap, String month) {
+        /*
+        acumulate data
+         */
+        int count = dataMap.getOrDefault(month, 0);
+        dataMap.put(month, count + 1);
+    }
+
+    private void addDataToDataset(DefaultCategoryDataset dataset, Map<String, Integer> dataMap, String category) {
+        /*
+        add data to dataset for it to be displayed
+         */
+        for (Map.Entry<String, Integer> entry : dataMap.entrySet()) {
+            String month = entry.getKey();
+            Integer count = entry.getValue();
+            dataset.addValue(count, category, month);
+        }
+    }
+
+    private void viewCompletedReservations() {
+        /*
+        view all completed reservations
+         */
+        ArrayList<Reservation> reservations;
+        try {
+            Object[] values = new Object[]{};
+            reservations = getReservations(scripts.selectReturnedReservations, values, "no");
+        } catch (SQLException exception) {
+            JOptionPane.showMessageDialog(mainFrame, exception.getMessage());
+            return;
+        }
+        displayReservations(reservations, "viewCompletedReservations", "officer");
+    }
 
     public static void main(String[] args) throws SQLException {
         new PartyRental();
