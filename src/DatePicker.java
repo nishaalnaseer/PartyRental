@@ -3,6 +3,10 @@ import java.util.Calendar;
 import java.util.HashMap;
 
 public class DatePicker {
+    /*
+    this is a class containing a gui element that is a compabination of
+    three JComboBox to create a single date picker
+     */
     private final JPanel panel;
     private final JComboBox<String> dayComboBox;
     private final JComboBox<String> monthComboBox;

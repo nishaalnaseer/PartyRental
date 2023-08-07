@@ -7,6 +7,9 @@ public class Navigator {
     class to handles opening and closing of panels
     it really works by putting panels into a stack. what's displayed is at the top of the stack
     got the idea from flutter, java < flutter for client side applications
+
+    maunally calling the garbage collector on the closing of panels has resulted
+    in lower overrall memory usage, before it would go on increasing
      */
     private final Stack<JPanel> stack = new Stack<>();
     private final JFrame root;

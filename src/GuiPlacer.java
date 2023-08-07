@@ -2,6 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 
 public class GuiPlacer {
+    /*
+    this is a class created to streamline the placing of gui elements
+     */
 
     private final JPanel container = new JPanel(new GridBagLayout());
     private final GridBagConstraints gbc = new GridBagConstraints();
