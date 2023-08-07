@@ -2811,9 +2811,12 @@ public class PartyRental {
         JPanel panel = new JPanel(new GridBagLayout());
 
         JButton button = new JButton("Generate");
-        String[] types = {"Customer Type", "Reservations"};
+        String[] types = {"Customer Type", "Reservations", "Income Report"};
         JComboBox<String> type = new JComboBox<>(types);
         button.addActionListener(e -> generateReport((String) Objects.requireNonNull(type.getSelectedItem())));
+
+        JButton back = new JButton("Back");
+        back.addActionListener(e -> navigator.close());
 
         GuiPlacer placer = new GuiPlacer(400, 500);
         Component[] elements = {
@@ -2834,6 +2837,8 @@ public class PartyRental {
          */
         if (type.equals("Customer Type")) {
             customersReport();
+        } else if (type.equals("Income Report")) {
+            incomeReport();
         } else {
             reservationsReport();
         }
@@ -2864,19 +2869,19 @@ public class PartyRental {
 
                 switch (typeID) {
                     case 1:
-                        accumulateData(countDom, month);
+                        accumulateData(countDom, month, 1);
                         break;
                     case 2:
-                        accumulateData(countGov, month);
+                        accumulateData(countGov, month, 1);
                         break;
                     case 3:
-                        accumulateData(countDip, month);
+                        accumulateData(countDip, month, 1);
                         break;
                     case 4:
-                        accumulateData(countPriv, month);
+                        accumulateData(countPriv, month, 1);
                         break;
                     case 5:
-                        accumulateData(countRes, month);
+                        accumulateData(countRes, month, 1);
                         break;
                     default:
                         JOptionPane.showMessageDialog(mainFrame, "Error reading SQL1");
@@ -2951,9 +2956,9 @@ public class PartyRental {
                 String rentMonth = monthFormat.format(rentDate);
                 String returnMonth = monthFormat.format(returnDate);
 
-                accumulateData(reservations, reservationMonth);
-                accumulateData(rents, rentMonth);
-                accumulateData(returns, returnMonth);
+                accumulateData(reservations, reservationMonth, 1);
+                accumulateData(rents, rentMonth, 1);
+                accumulateData(returns, returnMonth, 1);
             }
 
             addDataToDataset(dataset, reservations, "Reservations");
@@ -2996,12 +3001,20 @@ public class PartyRental {
         navigator.open(panel, "reservationsReport");
     }
 
-    private void accumulateData(Map<String, Integer> dataMap, String month) {
+    private void accumulateData(Map<String, Integer> dataMap, String month, int amount) {
         /*
         acumulate data
          */
         int count = dataMap.getOrDefault(month, 0);
-        dataMap.put(month, count + 1);
+        dataMap.put(month, count + amount);
+    }
+
+    private void accumulateFloat(Map<String, Float> dataMap, String month, Float amount) {
+        /*
+        acumulate data
+         */
+        Float count = dataMap.getOrDefault(month, Float.parseFloat("0"));
+        dataMap.put(month, count + amount);
     }
 
     private void addDataToDataset(DefaultCategoryDataset dataset, Map<String, Integer> dataMap, String category) {
@@ -3028,6 +3041,109 @@ public class PartyRental {
             return;
         }
         displayReservations(reservations, "viewCompletedReservations", "officer");
+    }
+
+    private void addFloatDataToDataset(DefaultCategoryDataset dataset, Map<String, Float> dataMap, String category) {
+        /*
+        add data to dataset for it to be displayed
+         */
+        for (Map.Entry<String, Float> entry : dataMap.entrySet()) {
+            String month = entry.getKey();
+            Float count = entry.getValue();
+            dataset.addValue(count, category, month);
+        }
+    }
+
+    private void incomeReport() {
+        /*
+        display an income report by different customers over time
+         */
+
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        SimpleDateFormat monthFormat = new SimpleDateFormat("MMM yyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+        ResultSet rs;
+        try {
+            rs = noValueQuery(scripts.incomeReport);
+
+            HashMap<String, Float> amountDom = new HashMap<>();
+            HashMap<String, Float> amountGov = new HashMap<>();
+            HashMap<String, Float> amountDip = new HashMap<>();
+            HashMap<String, Float> amountPriv = new HashMap<>();
+            HashMap<String, Float> amountRes = new HashMap<>();
+            HashMap<String, Float> amountTotal = new HashMap<>();
+
+            while (rs.next()) {
+                Date transactionDate = dateFormat.parse(rs.getString("date"));
+                int typeID = Integer.parseInt(rs.getString("type"));
+                String month = monthFormat.format(transactionDate);
+                float amount = Float.parseFloat(rs.getString("amount"));
+
+                accumulateFloat(amountTotal, month, amount);
+                switch (typeID) {
+                    case 1:
+                        accumulateFloat(amountDom, month, amount);
+                        break;
+                    case 2:
+                        accumulateFloat(amountGov, month, amount);
+                        break;
+                    case 3:
+                        accumulateFloat(amountDip, month, amount);
+                        break;
+                    case 4:
+                        accumulateFloat(amountPriv, month, amount);
+                        break;
+                    case 5:
+                        accumulateFloat(amountRes, month, amount);
+                        break;
+                    default:
+                        JOptionPane.showMessageDialog(mainFrame, "Error reading SQL1");
+                        return;
+                }
+            }
+
+            addFloatDataToDataset(dataset, amountDom, "DOMESTIC");
+            addFloatDataToDataset(dataset, amountGov, "GOVERNMENT");
+            addFloatDataToDataset(dataset, amountDip, "DIPLOMATIC");
+            addFloatDataToDataset(dataset, amountPriv, "PRIVATE");
+            addFloatDataToDataset(dataset, amountRes, "RESORTS");
+            addFloatDataToDataset(dataset, amountTotal, "TOTAL");
+
+        } catch (java.sql.SQLException e) {
+            JOptionPane.showMessageDialog(mainFrame, "SQL Error");
+            return;
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+
+        JFreeChart chart = ChartFactory.createLineChart(
+                "Income From Customer Category by Month",
+                "Month",
+                "Rufiyaa",
+                dataset,
+                PlotOrientation.VERTICAL,
+                true,
+                true,
+                false
+        );
+
+        CategoryPlot plot = chart.getCategoryPlot();
+        LineAndShapeRenderer renderer = new LineAndShapeRenderer();
+        plot.setRenderer(renderer);
+        renderer.setSeriesPaint(0, Color.RED);
+        renderer.setSeriesPaint(1, Color.GREEN);
+        renderer.setSeriesPaint(2, Color.BLUE);
+        plot.setRenderer(renderer);
+
+        ChartPanel chartPanel = new ChartPanel(chart);
+        JPanel panel = new JPanel();
+        panel.setLayout(new java.awt.BorderLayout());
+        panel.add(chartPanel, BorderLayout.CENTER);
+        panel.add(back, BorderLayout.SOUTH);
+        panel.validate();
+
+        navigator.open(panel, "incomeReport");
     }
 
     public static void main(String[] args) throws SQLException {

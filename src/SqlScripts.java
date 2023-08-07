@@ -177,4 +177,13 @@ public class SqlScripts {
 
     final String selectReturnedReservations =
             "SELECT * FROM reservation WHERE status = 'RETURNED'";
+
+    final String incomeReport =
+            "SELECT transaction.amount, customer.`type`, transaction.date FROM transaction\n" +
+                    "\n" +
+                    "JOIN reservation\n" +
+                    "ON reservation.id = transaction.reservation_id\n" +
+                    "\n" +
+                    "JOIN customer\n" +
+                    "ON customer.id = reservation.customer;";
 }
